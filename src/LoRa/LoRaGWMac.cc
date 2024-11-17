@@ -64,28 +64,13 @@ void LoRaGWMac::finish()
 
 void LoRaGWMac::configureNetworkInterface()
 {
-    //NetworkInterface *e = new NetworkInterface(this);
-
-    // data rate
-    //e->setDatarate(bitrate);
-
-    // generate a link-layer address to be used as interface token for IPv6
-    //e->setMACAddress(address);
-    //e->setInterfaceToken(address.formInterfaceIdentifier());
-
-    // capabilities
-    //e->setMtu(par("mtu"));
-    //e->setMulticast(true);
-    //e->setBroadcast(true);
-    //e->setPointToPoint(false);
+    // Get the mac address from parameter
     MacAddress address = parseMacAddressParameter(par("address"));
 
     // generate a link-layer address to be used as interface token for IPv6
     networkInterface->setMacAddress(address);
-    // data rate
-    //interfaceEntry->setDatarate(bitrate);
 
-    // capabilities
+    // set capabilities
     networkInterface->setMtu(par("mtu"));
     networkInterface->setMulticast(true);
     networkInterface->setBroadcast(true);
@@ -94,30 +79,32 @@ void LoRaGWMac::configureNetworkInterface()
 
 void LoRaGWMac::handleSelfMessage(cMessage *msg)
 {
+    // We only have a dutycycletimer that when rings we stop waiting for the DC
     if(msg == dutyCycleTimer) waitingForDC = false;
 }
 
 void LoRaGWMac::handleUpperMessage(cMessage *msg)
 {
+    // If we arent waiting for the DC
     if(waitingForDC == false)
     {
-//        LoRaMacFrame *frame = check_and_cast<LoRaMacFrame *>(msg);
-//        frame->removeControlInfo();
+        // Make the message a packet and get the LoRaMacFrame at the start of it
         auto pkt = check_and_cast<Packet *>(msg);
         const auto &frame = pkt->peekAtFront<LoRaMacFrame>();
+
+        // Remove the control info if it exists
         if (pkt->getControlInfo())
             delete pkt->removeControlInfo();
 
+        // Making sure to tag the packet (for stats or something like that)
         auto tag = pkt->addTagIfAbsent<MacAddressReq>();
         tag->setDestAddress(frame->getReceiverAddress());
-//        LoRaMacControlInfo *ctrl = new LoRaMacControlInfo();
-//        ctrl->setSrc(address);
-//        ctrl->setDest(frame->getReceiverAddress());
-//        frame->setControlInfo(ctrl);
-//        sendDown(frame);
 
-
+        // We are now waiting for the DC, so set the variable
         waitingForDC = true;
+
+        // Set delta based on spreading factor
+        // TODO: refactor to a switch statement
         double delta;
         if(frame->getLoRaSF() == 7) delta = 0.61696;
         if(frame->getLoRaSF() == 8) delta = 1.23392;
@@ -125,12 +112,16 @@ void LoRaGWMac::handleUpperMessage(cMessage *msg)
         if(frame->getLoRaSF() == 10) delta = 4.28032;
         if(frame->getLoRaSF() == 11) delta = 7.24992;
         if(frame->getLoRaSF() == 12) delta = 14.49984;
+
+        // Schedule the dutycycletimer to ring in delta seconds
         scheduleAt(simTime() + delta, dutyCycleTimer);
+
+        // Counter, tagging and sending the packet to the lower layer
         GW_forwardedDown++;
         pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
         sendDown(pkt);
     }
-    else
+    else // If we where waiting for the DC drop the packet
     {
         GW_droppedDC++;
         delete msg;
@@ -139,9 +130,12 @@ void LoRaGWMac::handleUpperMessage(cMessage *msg)
 
 void LoRaGWMac::handleLowerMessage(cMessage *msg)
 {
+    // Make the message a packet and get the Preamble and macframe from it
     auto pkt = check_and_cast<Packet *>(msg);
     auto header = pkt->popAtFront<LoRaPhyPreamble>();
     const auto &frame = pkt->peekAtFront<LoRaMacFrame>();
+
+    // Check if it is broadcasted and send it up else drop the packet
     if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
         sendUp(pkt);
     else
@@ -150,6 +144,7 @@ void LoRaGWMac::handleLowerMessage(cMessage *msg)
 
 void LoRaGWMac::sendPacketBack(Packet *receivedFrame)
 {
+    // Make a packet to send back to the sender
     const auto &frame = receivedFrame->peekAtFront<LoRaMacFrame>();
     EV << "sending Data frame back" << endl;
     auto pktBack = new Packet("LoraPacket");
@@ -163,12 +158,15 @@ void LoRaGWMac::sendPacketBack(Packet *receivedFrame)
 
 void LoRaGWMac::createFakeLoRaMacFrame()
 {
-
+    // NOTE: redundant, havent checked if removing breaks anything
 }
 
 void LoRaGWMac::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)
 {
-    Enter_Method_Silent();
+    Enter_Method_Silent(); // TODO: look at this function
+
+    // NOTE: Not sure, but it seems that we switch to RECEIVER or something in this function
+    // cant be fully sure to the extend of this function
     if (signalID == IRadio::transmissionStateChangedSignal) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
@@ -181,6 +179,7 @@ void LoRaGWMac::receiveSignal(cComponent *source, simsignal_t signalID, intval_t
 
 MacAddress LoRaGWMac::getAddress()
 {
+    // No explanation needed
     return address;
 }
 
