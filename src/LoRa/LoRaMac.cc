@@ -32,6 +32,7 @@ Define_Module(LoRaMac);
 
 LoRaMac::~LoRaMac()
 {
+    /* self cMessages */
     cancelAndDelete(endTransmission);
     cancelAndDelete(endReception);
     cancelAndDelete(droppedPacket);
@@ -42,7 +43,7 @@ LoRaMac::~LoRaMac()
     cancelAndDelete(mediumStateChange);
 }
 
-/****************************************************************
+/*
  * Initialization functions.
  */
 void LoRaMac::initialize(int stage)
@@ -51,11 +52,12 @@ void LoRaMac::initialize(int stage)
     if (stage == INITSTAGE_LOCAL) {
         EV << "Initializing stage 0\n";
 
+        /* Parameters are set by there values from the ini file */
         //maxQueueSize = par("maxQueueSize");
-        headerLength = par("headerLength");
-        ackLength = par("ackLength");
-        ackTimeout = par("ackTimeout");
-        retryLimit = par("retryLimit");
+        headerLength = par("headerLength"); /* Should be removed in the future */
+        ackLength = par("ackLength"); /* Remove when TDMA is working*/
+        ackTimeout = par("ackTimeout"); /* Remove when TDMA is working*/
+        retryLimit = par("retryLimit"); /* Remove when TDMA is working*/
 
         waitDelay1Time = 1;
         listening1Time = 1;
@@ -69,8 +71,9 @@ void LoRaMac::initialize(int stage)
             // change module parameter from "auto" to concrete address
             par("address").setStringValue(address.str().c_str());
         }
-        else
+        else {
             address.setAddress(addressString);
+        }
 
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
@@ -153,7 +156,7 @@ void LoRaMac::configureNetworkInterface()
     networkInterface->setPointToPoint(false);
 }
 
-/****************************************************************
+/*
  * Message handling functions.
  */
 void LoRaMac::handleSelfMessage(cMessage *msg)
@@ -180,7 +183,6 @@ void LoRaMac::handleUpperPacket(Packet *packet)
     currentTxFrame = pktEncap;
     handleWithFsm(currentTxFrame);
 }
-
 
 void LoRaMac::handleLowerPacket(Packet *msg)
 {
@@ -376,6 +378,9 @@ Packet *LoRaMac::encapsulate(Packet *msg)
     msg->setArrival(msg->getArrivalModuleId(), msg->getArrivalGateId());
     auto tag = msg->getTag<LoRaTag>();
 
+    /* For TDMA it would perhaps be better to have this in the LoRaPhy preamble,
+     * but i do not think it is possible
+     */
     frame->setTransmitterAddress(address);
     frame->setLoRaTP(tag->getPower().get());
     frame->setLoRaCF(tag->getCenterFrequency());
@@ -395,7 +400,6 @@ Packet *LoRaMac::encapsulate(Packet *msg)
 
 Packet *LoRaMac::decapsulate(Packet *frame)
 {
-
     auto loraHeader = frame->popAtFront<LoRaMacFrame>();
     frame->addTagIfAbsent<MacAddressInd>()->setSrcAddress(loraHeader->getTransmitterAddress());
     frame->addTagIfAbsent<MacAddressInd>()->setDestAddress(loraHeader->getReceiverAddress());
@@ -403,7 +407,7 @@ Packet *LoRaMac::decapsulate(Packet *frame)
     return frame;
 }
 
-/****************************************************************
+/*
  * Frame sender functions.
  */
 void LoRaMac::sendDataFrame(Packet *frameToSend)
@@ -424,6 +428,7 @@ void LoRaMac::sendDataFrame(Packet *frameToSend)
 
 void LoRaMac::sendAckFrame()
 {
+    /* This should not be need for TDMA */
     auto frameToAck = static_cast<Packet *>(endSifs->getContextPointer());
     endSifs->setContextPointer(nullptr);
     auto macHeader = makeShared<CsmaCaMacAckHeader>();
@@ -443,7 +448,7 @@ void LoRaMac::sendAckFrame()
     sendDown(frame);
 }
 
-/****************************************************************
+/*
  * Helper functions.
  */
 void LoRaMac::finishCurrentTransmission()
@@ -468,7 +473,8 @@ bool LoRaMac::isReceiving()
 
 bool LoRaMac::isAck(const Ptr<const LoRaMacFrame> &frame)
 {
-    return false;//dynamic_cast<LoRaMacFrame *>(frame);
+    /* Not needed for TDMA */
+    return false;//dynamic_cast<LoRaMacFrame *>(frame); // Why?
 }
 
 bool LoRaMac::isBroadcast(const Ptr<const LoRaMacFrame> &frame)
