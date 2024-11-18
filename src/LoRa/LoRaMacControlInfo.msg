@@ -14,7 +14,7 @@
 // 
 
 //
-// TODO generated message class
+// TODO This is our TDMA msg thing for omnet
 //
 
 import inet.common.INETDefs;

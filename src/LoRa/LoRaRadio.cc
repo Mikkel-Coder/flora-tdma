@@ -27,7 +27,7 @@
 #include "../LoRaPhy/LoRaPhyPreamble_m.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
 
-
+/* Almost the same as LoRaGWRadio.cc */
 
 namespace flora {
 
@@ -64,18 +64,22 @@ std::ostream& LoRaRadio::printToStream(std::ostream& stream, int level, int evFl
 
 const ITransmission *LoRaRadio::getTransmissionInProgress() const
 {
-    if (!transmissionTimer->isScheduled())
+    if (!transmissionTimer->isScheduled()) {
         return nullptr;
-    else
+    }
+    else {
         return static_cast<WirelessSignal *>(transmissionTimer->getContextPointer())->getTransmission();
+    }
 }
 
 const ITransmission *LoRaRadio::getReceptionInProgress() const
 {
-    if (receptionTimer == nullptr)
+    if (receptionTimer == nullptr) {
         return nullptr;
-    else
+    }
+    else {
         return static_cast<WirelessSignal *>(receptionTimer->getControlInfo())->getTransmission();
+    }
 }
 
 IRadioSignal::SignalPart LoRaRadio::getTransmittedSignalPart() const
@@ -90,10 +94,12 @@ IRadioSignal::SignalPart LoRaRadio::getReceivedSignalPart() const
 
 void LoRaRadio::handleMessageWhenDown(cMessage *message)
 {
-    if (message->getArrivalGate() == radioIn || isReceptionTimer(message))
+    if (message->getArrivalGate() == radioIn || isReceptionTimer(message)) {
         delete message;
-    else
+    }
+    else {
         OperationalBase::handleMessageWhenDown(message);
+    }
 }
 
 void LoRaRadio::handleMessageWhenUp(cMessage *message)
@@ -122,19 +128,15 @@ void LoRaRadio::handleMessageWhenUp(cMessage *message)
 
 void LoRaRadio::handleSelfMessage(cMessage *message)
 {
+    /* This should be removed */
     NarrowbandRadioBase::handleSelfMessage(message);
-    /*if (message == switchTimer)
-        handleSwitchTimer(message);
-    else if (message == transmissionTimer)
-        handleTransmissionTimer(message);
-    else if (isReceptionTimer(message))
-        handleReceptionTimer(message);
-    else
-        throw cRuntimeError("Unknown self message");*/
 }
 
 void LoRaRadio::handleTransmissionTimer(cMessage *message)
 {
+    /* I guess that this is the same for inets NarrowBandradio::handleTransmisionTimer.
+     * If so, then remove this
+     */
     if (message->getKind() == IRadioSignal::SIGNAL_PART_WHOLE)
         endTransmission();
     else if (message->getKind() == IRadioSignal::SIGNAL_PART_PREAMBLE)
@@ -149,6 +151,9 @@ void LoRaRadio::handleTransmissionTimer(cMessage *message)
 
 void LoRaRadio::handleReceptionTimer(cMessage *message)
 {
+     /* I guess that this is the same for inets NarrowBandradio::handleReceptionTimer.
+     * If so, then remove this
+     */
     if (message->getKind() == IRadioSignal::SIGNAL_PART_WHOLE)
         endReception(message);
     else if (message->getKind() == IRadioSignal::SIGNAL_PART_PREAMBLE)
@@ -196,7 +201,7 @@ void LoRaRadio::handleUpperPacket(Packet *packet)
         auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();
         signalPowerReq->setPower(tag->getPower());
 
-        preamble->setChunkLength(b(16));
+        preamble->setChunkLength(b(16)); // Why 2B? This should be in symbols (Is that not possible in omnet?)
         packet->insertAtFront(preamble);
 
         if (transmissionTimer->isScheduled())
@@ -221,169 +226,46 @@ void LoRaRadio::handleSignal(WirelessSignal *radioFrame)
         startReception(receptionTimer, IRadioSignal::SIGNAL_PART_WHOLE);
 }
 
-/*
-bool LoRaRadio::handleNodeStart(IDoneCallback *doneCallback)
-{
-    // NOTE: we ignore radio mode switching during start
-    completeRadioModeSwitch(RADIO_MODE_OFF);
-    return PhysicalLayerBase::handleNodeStart(doneCallback);
-}
-bool LoRaRadio::handleNodeShutdown(IDoneCallback *doneCallback)
-{
-    // NOTE: we ignore radio mode switching and ongoing transmission during shutdown
-    cancelEvent(switchTimer);
-    if (transmissionTimer->isScheduled())
-        abortTransmission();
-    completeRadioModeSwitch(RADIO_MODE_OFF);
-    return PhysicalLayerBase::handleNodeShutdown(doneCallback);
-}
-void LoRaRadio::handleNodeCrash()
-{
-    cancelEvent(switchTimer);
-    if (transmissionTimer->isScheduled())
-        abortTransmission();
-    completeRadioModeSwitch(RADIO_MODE_OFF);
-    PhysicalLayerBase::handleNodeCrash();
-}
-*/
-
 void LoRaRadio::startTransmission(Packet *macFrame, IRadioSignal::SignalPart part)
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::startTransmission(macFrame, part);
-   /* auto radioFrame = createSignal(macFrame);
-    auto transmission = radioFrame->getTransmission();
-    transmissionTimer->setKind(part);
-    transmissionTimer->setContextPointer(const_cast<Signal *>(radioFrame));
-    scheduleAt(transmission->getEndTime(part), transmissionTimer);
-    EV_INFO << "Transmission started: " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(part) << " as " << transmission << endl;
-    updateTransceiverState();
-    updateTransceiverPart();
-    emit(transmissionStartedSignal, check_and_cast<const cObject *>(transmission));
-    //check_and_cast<LoRaMedium *>(medium)->fireTransmissionStarted(transmission);
-    //check_and_cast<LoRaMedium *>(medium)->emit(IRadioMedium::transmissionStartedSignal, check_and_cast<const cObject *>(transmission));
-    //check_and_cast<RadioMedium *>(medium)->emit(transmissionStartedSignal, check_and_cast<const cObject *>(transmission));
-    check_and_cast<RadioMedium *>(medium)->emit(IRadioMedium::signalDepartureStartedSignal, check_and_cast<const cObject *>(transmission));
-    */
 }
 
 void LoRaRadio::continueTransmission()
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::continueTransmission();
-    /*
-    auto previousPart = (IRadioSignal::SignalPart)transmissionTimer->getKind();
-    auto nextPart = (IRadioSignal::SignalPart)(previousPart + 1);
-    auto radioFrame = static_cast<Signal *>(transmissionTimer->getContextPointer());
-    auto transmission = radioFrame->getTransmission();
-    EV_INFO << "Transmission ended: " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(previousPart) << " as " << radioFrame->getTransmission() << endl;
-    transmissionTimer->setKind(nextPart);
-    scheduleAt(transmission->getEndTime(nextPart), transmissionTimer);
-    EV_INFO << "Transmission started: " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(nextPart) << " as " << transmission << endl;
-    updateTransceiverState();
-    updateTransceiverPart();
-    */
 }
 
 void LoRaRadio::endTransmission()
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::endTransmission();
-    /*
-    auto part = (IRadioSignal::SignalPart)transmissionTimer->getKind();
-    auto radioFrame = static_cast<Signal *>(transmissionTimer->getContextPointer());
-    auto transmission = radioFrame->getTransmission();
-    transmissionTimer->setContextPointer(nullptr);
-    EV_INFO << "Transmission ended: " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(part) << " as " << transmission << endl;
-    updateTransceiverState();
-    updateTransceiverPart();
-    //check_and_cast<LoRaMedium *>(medium)->fireTransmissionEnded(transmission);
-    //check_and_cast<RadioMedium *>(medium)->emit(transmissionEndedSignal, check_and_cast<const cObject *>(transmission));
-    emit(transmissionEndedSignal, check_and_cast<const cObject *>(transmission));
-    // TODO: move to radio medium
-    check_and_cast<LoRaMedium *>(medium)->emit(IRadioMedium::signalDepartureEndedSignal, check_and_cast<const cObject *>(transmission));
-    */
-
 }
 
 void LoRaRadio::abortTransmission()
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::abortTransmission();
- /*   auto part = (IRadioSignal::SignalPart)transmissionTimer->getKind();
-    auto radioFrame = static_cast<Signal *>(transmissionTimer->getContextPointer());
-    auto transmission = radioFrame->getTransmission();
-    transmissionTimer->setContextPointer(nullptr);
-    EV_INFO << "Transmission aborted: " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(part) << " as " << transmission << endl;
-    EV_WARN << "Aborting ongoing transmissions is not supported" << endl;
-    cancelEvent(transmissionTimer);
-    updateTransceiverState();
-    updateTransceiverPart();*/
 }
 
 WirelessSignal *LoRaRadio::createSignal(Packet *packet) const
 {
+    /* This should use NarrowBandRadio method instead */
     return NarrowbandRadioBase::createSignal(packet);
-    /*
-    Signal *radioFrame = check_and_cast<Signal *>(medium->transmitPacket(this, packet));
-    ASSERT(radioFrame->getDuration() != 0);
-    return radioFrame;
-    */
 }
 
 void LoRaRadio::startReception(cMessage *timer, IRadioSignal::SignalPart part)
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::startReception(timer, part);
-/*    auto signal = static_cast<Signal *>(timer->getControlInfo());
-    auto arrival = signal->getArrival();
-    auto reception = signal->getReception();
-// TODO: should be this, but it breaks fingerprints: if (receptionTimer == nullptr && isReceiverMode(radioMode) && arrival->getStartTime(part) == simTime()) {
-    if (isReceiverMode(radioMode) && arrival->getStartTime(part) == simTime()) {
-        auto transmission = signal->getTransmission();
-        auto isReceptionAttempted = medium->isReceptionAttempted(this, transmission, part);
-        EV_INFO << "Reception started: " << (isReceptionAttempted ? "attempting" : "not attempting") << " " << (ISignal *)signal << " " << IRadioSignal::getSignalPartName(part) << " as " << reception << endl;
-        if (isReceptionAttempted)
-        {
-            receptionTimer = timer;
-            emit(receptionStartedSignal, check_and_cast<const cObject *>(reception));
-        }
-    }
-    else
-        EV_INFO << "Reception started: ignoring " << (ISignal *)signal << " " << IRadioSignal::getSignalPartName(part) << " as " << reception << endl;
-    timer->setKind(part);
-    scheduleAt(arrival->getEndTime(part), timer);
-    updateTransceiverState();
-    updateTransceiverPart();
-    //check_and_cast<LoRaMedium *>(medium)->fireReceptionStarted(reception);
-    //check_and_cast<RadioMedium *>(medium)->emit(receptionStartedSignal, check_and_cast<const cObject *>(reception));
-    check_and_cast<LoRaMedium *>(medium)->emit(IRadioMedium::signalArrivalStartedSignal, check_and_cast<const cObject *>(reception));
-    */
 }
 
 void LoRaRadio::continueReception(cMessage *timer)
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::continueReception(timer);
- /*   auto previousPart = (IRadioSignal::SignalPart)timer->getKind();
-    auto nextPart = (IRadioSignal::SignalPart)(previousPart + 1);
-    auto radioFrame = static_cast<Signal *>(timer->getControlInfo());
-    auto arrival = radioFrame->getArrival();
-    auto reception = radioFrame->getReception();
-    if (timer == receptionTimer && isReceiverMode(radioMode) && arrival->getEndTime(previousPart) == simTime()) {
-        auto transmission = radioFrame->getTransmission();
-        bool isReceptionSuccessful = medium->isReceptionSuccessful(this, transmission, previousPart);
-        EV_INFO << "Reception ended: " << (isReceptionSuccessful ? "successfully" : "unsuccessfully") << " for " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(previousPart) << " as " << reception << endl;
-        if (!isReceptionSuccessful)
-            receptionTimer = nullptr;
-        auto isReceptionAttempted = medium->isReceptionAttempted(this, transmission, nextPart);
-        EV_INFO << "Reception started: " << (isReceptionAttempted ? "attempting" : "not attempting") << " " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(nextPart) << " as " << reception << endl;
-        if (!isReceptionAttempted)
-            receptionTimer = nullptr;
-    }
-    else {
-        EV_INFO << "Reception ended: ignoring " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(previousPart) << " as " << reception << endl;
-        EV_INFO << "Reception started: ignoring " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(nextPart) << " as " << reception << endl;
-    }
-    timer->setKind(nextPart);
-    scheduleAt(arrival->getEndTime(nextPart), timer);
-    updateTransceiverState();
-    updateTransceiverPart();
-    */
 }
 
 void LoRaRadio::decapsulate(Packet *packet) const
@@ -401,11 +283,12 @@ void LoRaRadio::decapsulate(Packet *packet) const
 
 void LoRaRadio::endReception(cMessage *timer)
 {
-
     auto part = (IRadioSignal::SignalPart)timer->getKind();
     auto signal = static_cast<WirelessSignal *>(timer->getControlInfo());
     auto arrival = signal->getArrival();
     auto reception = signal->getReception();
+
+    /* If timers are sane and the radio is ready to receive */
     if (timer == receptionTimer && isReceiverMode(radioMode) && arrival->getEndTime() == simTime()) {
         auto transmission = signal->getTransmission();
         // TODO: this would draw twice from the random number generator in isReceptionSuccessful: auto isReceptionSuccessful = medium->isReceptionSuccessful(this, transmission, part);
@@ -423,69 +306,20 @@ void LoRaRadio::endReception(cMessage *timer)
         receptionTimer = nullptr;
         emit(receptionEndedSignal, check_and_cast<const cObject *>(reception));
     }
-    else
+    else {
         EV_INFO << "Reception ended: \x1b[1mignoring\x1b[0m " << (IWirelessSignal *)signal << " " << IRadioSignal::getSignalPartName(part) << " as " << reception << endl;
-    updateTransceiverState();
-    updateTransceiverPart();
-    delete timer;
-    // TODO: move to radio medium
-    check_and_cast<RadioMedium *>(medium.get())->emit(IRadioMedium::signalArrivalEndedSignal, check_and_cast<const cObject *>(reception));
-/*
-    auto part = (IRadioSignal::SignalPart)timer->getKind();
-    auto signal = static_cast<Signal *>(timer->getControlInfo());
-    auto arrival = signal->getArrival();
-    auto reception = signal->getReception();
-    if (timer == receptionTimer && isReceiverMode(radioMode) && arrival->getEndTime() == simTime()) {
-    //if (isReceiverMode(radioMode) && arrival->getEndTime() == simTime()) {
-        auto transmission = signal->getTransmission();
-// TODO: this would draw twice from the random number generator in isReceptionSuccessful: auto isReceptionSuccessful = medium->isReceptionSuccessful(this, transmission, part);
-        auto isReceptionSuccessful = medium->getReceptionDecision(this, signal->getListening(), transmission, part)->isReceptionSuccessful();
-        EV_INFO << "Reception ended: " << (isReceptionSuccessful ? "successfully" : "unsuccessfully") << " for " << (ISignal *)signal << " " << IRadioSignal::getSignalPartName(part) << " as " << reception << endl;
-        auto macFrame = medium->receivePacket(this, signal);
-        auto tag = macFrame->addTag<flora::LoRaTag>();
-        auto preamble = macFrame->popAtFront<LoRaPhyPreamble>();
-        tag->setBandwidth(preamble->getBandwidth());
-        tag->setCenterFrequency(preamble->getCenterFrequency());
-        tag->setCodeRendundance(preamble->getCodeRendundance());
-        tag->setPower(preamble->getPower());
-        tag->setSpreadFactor(preamble->getSpreadFactor());
-        tag->setUseHeader(preamble->getUseHeader());
-        if(isReceptionSuccessful) {
-            emit(packetSentToUpperSignal, macFrame);
-            sendUp(macFrame);
-        }
-        else {
-            emit(LoRaRadio::droppedPacket, 0);
-            delete macFrame;
-        }
-        emit(receptionEndedSignal, check_and_cast<const cObject *>(reception));
-        receptionTimer = nullptr;
     }
-    else
-        EV_INFO << "Reception ended: ignoring " << (ISignal *)signal << " " << IRadioSignal::getSignalPartName(part) << " as " << reception << endl;
     updateTransceiverState();
     updateTransceiverPart();
-    //check_and_cast<LoRaMedium *>(medium)->fireReceptionEnded(reception);
-    //check_and_cast<RadioMedium *>(medium)->emit(receptionEndedSignal, check_and_cast<const cObject *>(reception));
-    check_and_cast<LoRaMedium *>(medium)->emit(IRadioMedium::signalArrivalEndedSignal, check_and_cast<const cObject *>(reception));
     delete timer;
-    */
+    // TODO: move to radio medium. It is already done?
+    check_and_cast<RadioMedium *>(medium.get())->emit(IRadioMedium::signalArrivalEndedSignal, check_and_cast<const cObject *>(reception));
 }
 
 void LoRaRadio::abortReception(cMessage *timer)
 {
+    /* This should use NarrowBandRadio method instead */
     NarrowbandRadioBase::abortReception(timer);
-  /*  auto radioFrame = static_cast<Signal *>(timer->getControlInfo());
-    auto part = (IRadioSignal::SignalPart)timer->getKind();
-    auto reception = radioFrame->getReception();
-    EV_INFO << "Reception aborted: for " << (ISignal *)radioFrame << " " << IRadioSignal::getSignalPartName(part) << " as " << reception << endl;
-    if (timer == receptionTimer)
-    {
-        receptionTimer = nullptr;
-    }
-    updateTransceiverState();
-    updateTransceiverPart();
-    */
 }
 
 void LoRaRadio::captureReception(cMessage *timer)
@@ -514,17 +348,6 @@ void LoRaRadio::sendUp(Packet *macFrame)
         emit(symbolErrorRateSignal, errorTag->getSymbolErrorRate());
     EV_INFO << "Sending up " << macFrame << endl;
     NarrowbandRadioBase::sendUp(macFrame);
-    //send(macFrame, upperLayerOut);
 }
-
-//double LoRaRadio::getCurrentTxPower()
-//{
-//    return currentTxPower;
-//}
-//
-//void LoRaRadio::setCurrentTxPower(double txPower)
-//{
-//    currentTxPower = txPower;
-//}
 
 } // namespace inet

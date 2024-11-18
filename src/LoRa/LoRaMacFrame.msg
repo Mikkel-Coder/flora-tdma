@@ -13,10 +13,6 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-//
-// TODO generated message class
-//
-
 import inet.common.INETDefs;
 import inet.common.Units;
 import inet.linklayer.common.MacAddress;
@@ -32,7 +28,7 @@ class LoRaMacFrame extends inet::FieldsChunk {
     inet::MacAddress transmitterAddress;
     inet::MacAddress receiverAddress;
 
-    int sequenceNumber;
+    int sequenceNumber; // I dot not think that this is needed
     double LoRaTP;
     inet::Hz LoRaCF;
     int LoRaSF;
