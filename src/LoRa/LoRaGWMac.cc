@@ -32,7 +32,6 @@ void LoRaGWMac::initialize(int stage)
     if (stage == INITSTAGE_LOCAL) {
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
-        //radioModule->subscribe(IRadio::radioModeChangedSignal, this);
         radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
         radio = check_and_cast<IRadio *>(radioModule);
         waitingForDC = false;
@@ -154,11 +153,6 @@ void LoRaGWMac::sendPacketBack(Packet *receivedFrame)
     frameToSend->setReceiverAddress(frame->getTransmitterAddress());
     pktBack->insertAtFront(frameToSend);
     sendDown(pktBack);
-}
-
-void LoRaGWMac::createFakeLoRaMacFrame()
-{
-    // NOTE: redundant, havent checked if removing breaks anything
 }
 
 void LoRaGWMac::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)
