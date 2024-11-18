@@ -141,8 +141,6 @@ void LoRaMac::finish()
 
 void LoRaMac::configureNetworkInterface()
 {
-    //NetworkInterface *e = new NetworkInterface(this);
-
     // data rate
     networkInterface->setDatarate(bitrate);
     networkInterface->setMacAddress(address);
@@ -163,31 +161,7 @@ void LoRaMac::handleSelfMessage(cMessage *msg)
     EV << "received self message: " << msg << endl;
     handleWithFsm(msg);
 }
-#if 0
-void LoRaMac::handleUpperPacket(cMessage *msg)
-{
-    if(fsm.getState() != IDLE) {
-            error("Wrong, it should not happen erroneous state: %s", fsm.getStateName());
-    }
-    auto pkt = check_and_cast<Packet *>(msg);
 
-    pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::lora);
-//    LoRaMacControlInfo *cInfo = check_and_cast<LoRaMacControlInfo *>(msg->getControlInfo());
-    auto pktEncap = encapsulate(pkt);
-
-    const auto &frame = pktEncap->peekAtFront<LoRaMacFrame>();
-
-    EV << "frame " << pktEncap << " received from higher layer, receiver = " << frame->getReceiverAddress() << endl;
-
-    txQueue->enqueuePacket(pktEncap);
-    if (fsm.getState() != IDLE)
-        EV << "deferring upper message transmission in " << fsm.getStateName() << " state\n";
-    else {
-        popTxQueue();
-        handleWithFsm(currentTxFrame);
-    }
-}
-#endif
 void LoRaMac::handleUpperPacket(Packet *packet)
 {
     if(fsm.getState() != IDLE) {
@@ -349,17 +323,6 @@ void LoRaMac::handleWithFsm(cMessage *msg)
         }
     }
 
-//    if (fsm.getState() == IDLE) {
-//        if (isReceiving())
-//            handleWithFsm(mediumStateChange);
-//        else if (currentTxFrame != nullptr)
-//            handleWithFsm(currentTxFrame);
-//        else if (!txQueue->isEmpty()) {
-//            popTxQueue();
-//            handleWithFsm(currentTxFrame);
-//        }
-//    }
-
     if (fsm.getState() == IDLE) {
         if (isReceiving())
             handleWithFsm(mediumStateChange);
@@ -423,7 +386,6 @@ Packet *LoRaMac::encapsulate(Packet *msg)
     frame->setReceiverAddress(MacAddress::BROADCAST_ADDRESS);
 
     ++sequenceNumber;
-    //frame->setLoRaUseHeader(cInfo->getLoRaUseHeader());
     frame->setLoRaUseHeader(tag->getUseHeader());
 
     msg->insertAtFront(frame);
@@ -438,10 +400,6 @@ Packet *LoRaMac::decapsulate(Packet *frame)
     frame->addTagIfAbsent<MacAddressInd>()->setSrcAddress(loraHeader->getTransmitterAddress());
     frame->addTagIfAbsent<MacAddressInd>()->setDestAddress(loraHeader->getReceiverAddress());
     frame->addTagIfAbsent<InterfaceInd>()->setInterfaceId(networkInterface->getInterfaceId());
-//    auto payloadProtocol = ProtocolGroup::ethertype.getProtocol(loraHeader->getNetworkProtocol());
-//    frame->addTagIfAbsent<DispatchProtocolReq>()->setProtocol(payloadProtocol);
-//    frame->addTagIfAbsent<PacketProtocolTag>()->setProtocol(payloadProtocol);
-
     return frame;
 }
 
@@ -455,17 +413,11 @@ void LoRaMac::sendDataFrame(Packet *frameToSend)
 
     auto frameCopy = frameToSend->dup();
 
-    //LoRaMacControlInfo *ctrl = new LoRaMacControlInfo();
-    //ctrl->setSrc(frameCopy->getTransmitterAddress());
-    //ctrl->setDest(frameCopy->getReceiverAddress());
-//    frameCopy->setControlInfo(ctrl);
     auto macHeader = frameCopy->peekAtFront<LoRaMacFrame>();
 
     auto macAddressInd = frameCopy->addTagIfAbsent<MacAddressInd>();
     macAddressInd->setSrcAddress(macHeader->getTransmitterAddress());
     macAddressInd->setDestAddress(macHeader->getReceiverAddress());
-
-    //frameCopy->addTag<PacketProtocolTag>()->setProtocol(&Protocol::lora);
 
     sendDown(frameCopy);
 }
@@ -478,11 +430,10 @@ void LoRaMac::sendAckFrame()
     macHeader->setReceiverAddress(MacAddress(frameToAck->peekAtFront<LoRaMacFrame>()->getTransmitterAddress().getInt()));
 
     EV << "sending Ack frame\n";
-    //auto macHeader = makeShared<CsmaCaMacAckHeader>();
+
     macHeader->setChunkLength(B(ackLength));
     auto frame = new Packet("CsmaAck");
     frame->insertAtFront(macHeader);
-//    frame->addTag<PacketProtocolTag>()->setProtocol(&Protocol::lora);
     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
 
     auto macAddressInd = frame->addTagIfAbsent<MacAddressInd>();
@@ -502,7 +453,6 @@ void LoRaMac::finishCurrentTransmission()
     scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time, endDelay_2);
     scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time + listening2Time, endListening_2);
     deleteCurrentTxFrame();
-    //popTxQueue();
 }
 
 Packet *LoRaMac::getCurrentTransmission()
@@ -550,4 +500,4 @@ MacAddress LoRaMac::getAddress()
     return address;
 }
 
-} // namespace inet
+} // namespace flora
