@@ -43,9 +43,10 @@ void SimpleLoRaApp::initialize(int stage)
         isOperational = (!nodeStatus) || nodeStatus->getState() == NodeStatus::UP;
         if (!isOperational)
             throw cRuntimeError("This module doesn't support starting in node DOWN state");
+        /* This do loop does not make any sense. It does not seem likely that the timeToFirstPacket will change */
         do {
             timeToFirstPacket = par("timeToFirstPacket");
-            EV << "Wylosowalem czas :" << timeToFirstPacket << endl;
+            EV << "I have generated this time: " << timeToFirstPacket << endl;
             //if(timeToNextPacket < 5) error("Time to next packet must be grater than 3");
         } while(timeToFirstPacket <= 5);
 
@@ -139,9 +140,6 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
     {
         handleMessageFromLowerLayer(msg);
         delete msg;
-        //cancelAndDelete(sendMeasurements);
-        //sendMeasurements = new cMessage("sendMeasurements");
-        //scheduleAt(simTime(), sendMeasurements);
     }
 }
 

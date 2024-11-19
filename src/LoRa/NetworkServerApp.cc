@@ -30,7 +30,7 @@ namespace flora {
 
 Define_Module(NetworkServerApp);
 
-
+/* This is not important for our project to get TDMA working */
 void NetworkServerApp::initialize(int stage)
 {
     if (stage == 0) {
