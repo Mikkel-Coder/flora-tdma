@@ -43,8 +43,6 @@ class PacketForwarder : public cSimpleModule, public cListener
     virtual void finish() override;
     void processLoraMACPacket(Packet *pk);
     void startUDP();
-    void sendPacket();
-    void setSocketOptions();
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }
     void receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details) override;
   public:

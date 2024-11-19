@@ -14,8 +14,6 @@
 // 
 
 #include "NetworkServerApp.h"
-//#include "inet/networklayer/ipv4/IPv4Datagram.h"
-//#include "inet/networklayer/contract/ipv4/IPv4ControlInfo.h"
 #include "inet/networklayer/common/L3AddressTag_m.h"
 #include "inet/transportlayer/common/L4PortTag_m.h"
 #include "inet/transportlayer/contract/udp/UdpControlInfo_m.h"
@@ -70,7 +68,6 @@ void NetworkServerApp::handleMessage(cMessage *msg)
         const auto &frame  = pkt->peekAtFront<LoRaMacFrame>();
         if (frame == nullptr)
             throw cRuntimeError("Header error type");
-        //LoRaMacFrame *frame = check_and_cast<LoRaMacFrame *>(msg);
         if (simTime() >= getSimulation()->getWarmupPeriod())
         {
             totalReceivedPackets++;
@@ -199,7 +196,6 @@ void NetworkServerApp::updateKnownNodes(Packet* pkt)
         newNode.numberOfSentADRPackets = 0;
         newNode.historyAllSNIR = new cOutVector;
         newNode.historyAllSNIR->setName("Vector of SNIR per node");
-        //newNode.historyAllSNIR->record(pkt->getSNIR());
         newNode.historyAllSNIR->record(math::fraction2dB(frame->getSNIR()));
         newNode.historyAllRSSI = new cOutVector;
         newNode.historyAllRSSI->setName("Vector of RSSI per node");
@@ -414,10 +410,7 @@ void NetworkServerApp::evaluateADR(Packet* pkt, L3Address pickedGateway, double 
 
       //  LoRaMacFrame *frameToSend = new LoRaMacFrame("ADRPacket");
 
-        //frameToSend->encapsulate(mgmtPacket);
         frameToSend->setReceiverAddress(frame->getTransmitterAddress());
-        //FIXME: What value to set for LoRa TP
-        //frameToSend->setLoRaTP(pkt->getLoRaTP());
         frameToSend->setLoRaTP(math::dBmW2mW(14));
         frameToSend->setLoRaCF(frame->getLoRaCF());
         frameToSend->setLoRaSF(frame->getLoRaSF());
@@ -431,7 +424,6 @@ void NetworkServerApp::evaluateADR(Packet* pkt, L3Address pickedGateway, double 
         socket.sendTo(pktAux, pickedGateway, destPort);
 
     }
-    //delete pkt;
 }
 
 void NetworkServerApp::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)

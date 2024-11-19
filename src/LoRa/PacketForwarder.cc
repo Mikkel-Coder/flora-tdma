@@ -14,8 +14,6 @@
 // 
 
 #include "PacketForwarder.h"
-//#include "inet/networklayer/ipv4/IPv4Datagram.h"
-//#include "inet/networklayer/contract/ipv4/IPv4ControlInfo.h"
 #include "inet/networklayer/common/L3AddressResolver.h"
 #include "inet/common/ModuleAccess.h"
 #include "inet/applications/base/ApplicationPacket_m.h"
@@ -48,8 +46,6 @@ void PacketForwarder::startUDP()
     const char *localAddress = par("localAddress");
     socket.bind(*localAddress ? L3AddressResolver().resolve(localAddress) : L3Address(), localPort);
     EV << "Dojechalismy za pierwszy resolv" << endl;
-    // TODO: is this required?
-    //setSocketOptions();
 
     const char *destAddrs = par("destAddresses");
     cStringTokenizer tokenizer(destAddrs);
@@ -81,8 +77,6 @@ void PacketForwarder::handleMessage(cMessage *msg)
         const auto &frame = pkt->peekAtFront<LoRaMacFrame>();
         if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
             processLoraMACPacket(pkt);
-        //send(msg, "upperLayerOut");
-        //sendPacket();
     } else if (msg->arrivedOn("socketIn")) {
         // FIXME : debug for now to see if LoRaMAC frame received correctly from network server
         EV << "Received UDP packet" << endl;
@@ -91,18 +85,8 @@ void PacketForwarder::handleMessage(cMessage *msg)
 
         if (frame == nullptr)
             throw cRuntimeError("Packet type error");
-        //EV << frame->getLoRaTP() << endl;
-        //delete frame;
-
-       /* auto loraTag = pkt->addTagIfAbsent<LoRaTag>();
-        pkt->setBandwidth(loRaBW);
-        pkt->setCarrierFrequency(loRaCF);
-        pkt->setSpreadFactor(loRaSF);
-        pkt->setCodeRendundance(loRaCR);
-        pkt->setPower(W(loRaTP));*/
 
         send(pkt, "lowerLayerOut");
-        //
     }
 }
 
@@ -125,9 +109,7 @@ void PacketForwarder::processLoraMACPacket(Packet *pk)
     frame->setSNIR(snirInd->getMinimumSnir());
     pk->insertAtFront(frame);
 
-    //bool exist = false;
     EV << frame->getTransmitterAddress() << endl;
-    //for (std::vector<nodeEntry>::iterator it = knownNodes.begin() ; it != knownNodes.end(); ++it)
 
     // FIXME : Identify network server message is destined for.
     L3Address destAddr = destAddresses[0];
@@ -135,25 +117,6 @@ void PacketForwarder::processLoraMACPacket(Packet *pk)
        delete pk->removeControlInfo();
 
     socket.sendTo(pk, destAddr, destPort);
-}
-
-void PacketForwarder::sendPacket()
-{
-//    LoRaAppPacket *mgmtCommand = new LoRaAppPacket("mgmtCommand");
-//    mgmtCommand->setMsgType(TXCONFIG);
-//    LoRaOptions newOptions;
-//    newOptions.setLoRaTP(uniform(0.1, 1));
-//    mgmtCommand->setOptions(newOptions);
-//
-//    LoRaMacFrame *response = new LoRaMacFrame("mgmtCommand");
-//    response->encapsulate(mgmtCommand);
-//    response->setLoRaTP(pk->getLoRaTP());
-//    response->setLoRaCF(pk->getLoRaCF());
-//    response->setLoRaSF(pk->getLoRaSF());
-//    response->setLoRaBW(pk->getLoRaBW());
-//    response->setReceiverAddress(pk->getTransmitterAddress());
-//    send(response, "lowerLayerOut");
-
 }
 
 void PacketForwarder::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)
