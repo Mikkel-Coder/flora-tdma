@@ -38,7 +38,6 @@ class LoRaLogNormalShadowing : public FreeSpacePathLoss
   public:
     LoRaLogNormalShadowing();
     virtual std::ostream& printToStream(std::ostream& stream, int level, int evFlags = 0) const override;
-    //virtual double computePathLoss(const ITransmission *transmission, const IArrival *arrival) const override;
     virtual double computePathLoss(mps propagationSpeed, Hz frequency, m distance) const override;
     m computeRange(W transmissionPower) const;
 };

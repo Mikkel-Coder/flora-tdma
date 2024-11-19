@@ -38,8 +38,6 @@ void LoRaPathLossOulu::initialize(int stage)
 double LoRaPathLossOulu::computePathLoss(mps propagationSpeed, Hz frequency, m distance) const
 {
     //EPL = B + 10nlog10( d / d0 )
-    //double PL_d0_db = 127.41;
-    //double PL_db = PL_d0_db + 10 * gamma * log10(unit(distance / d0).get()) + normal(0.0, sigma);
     double PL_db = B + 10 * n * log10(unit(distance/d0).get()) - antennaGain + normal(0.0, sigma);
     return math::dB2fraction(-PL_db);
 }

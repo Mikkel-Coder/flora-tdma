@@ -47,7 +47,6 @@ void SimpleLoRaApp::initialize(int stage)
         do {
             timeToFirstPacket = par("timeToFirstPacket");
             EV << "I have generated this time: " << timeToFirstPacket << endl;
-            //if(timeToNextPacket < 5) error("Time to next packet must be grater than 3");
         } while(timeToFirstPacket <= 5);
 
         //timeToFirstPacket = par("timeToFirstPacket");
@@ -63,16 +62,10 @@ void SimpleLoRaApp::initialize(int stage)
         //LoRa physical layer parameters
         loRaRadio = check_and_cast<LoRaRadio *>(getParentModule()->getSubmodule("LoRaNic")->getSubmodule("radio"));
         loRaRadio->loRaTP = par("initialLoRaTP").doubleValue();
-//        setTP(par("initialLoRaTP").doubleValue());
-//        loRaCF = units::values::Hz(par("initialLoRaCF").doubleValue());
         loRaRadio->loRaCF = units::values::Hz(par("initialLoRaCF").doubleValue());
-//        loRaSF = par("initialLoRaSF");
         loRaRadio->loRaSF = par("initialLoRaSF");
-//        loRaBW = inet::units::values::Hz(par("initialLoRaBW").doubleValue());
         loRaRadio->loRaBW = inet::units::values::Hz(par("initialLoRaBW").doubleValue());
-//        loRaCR = par("initialLoRaCR");
         loRaRadio->loRaCR = par("initialLoRaCR");
-//        loRaUseHeader = par("initialUseHeader");
         loRaRadio->loRaUseHeader = par("initialUseHeader");
         evaluateADRinNode = par("evaluateADRinNode");
         sfVector.setName("SF Vector");
@@ -206,14 +199,6 @@ void SimpleLoRaApp::sendJoinRequest()
     loraTag->setPower(mW(math::dBmW2mW(getTP())));
 
     //add LoRa control info
-  /*  LoRaMacControlInfo *cInfo = new LoRaMacControlInfo();
-    cInfo->setLoRaTP(loRaTP);
-    cInfo->setLoRaCF(loRaCF);
-    cInfo->setLoRaSF(loRaSF);
-    cInfo->setLoRaBW(loRaBW);
-    cInfo->setLoRaCR(loRaCR);
-    pktRequest->setControlInfo(cInfo);*/
-
     sfVector.record(getSF());
     tpVector.record(getTP());
     EV << "Wysylam pakiet z TP: " << getTP() << endl;

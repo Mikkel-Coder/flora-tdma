@@ -22,7 +22,6 @@ module LoRaMedium extends RadioMedium
     parameters:
         propagation.typename = default("ConstantSpeedPropagation");
         analogModel.typename = default("LoRaAnalogModel");
-        //backgroundNoiseType = default("LoRaBackgroundNoise");
 
         // 802.15.4-2006, page 266
         pathLoss.typename = default("LoRaLogNormalShadowing");

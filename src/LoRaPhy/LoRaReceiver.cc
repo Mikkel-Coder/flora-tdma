@@ -58,10 +58,7 @@ bool LoRaReceiver::computeIsReceptionPossible(const IListening *listening, const
 {
     //here we can check compatibility of LoRaTx parameters (or beeing a gateway)
     const LoRaTransmission *loRaTransmission = check_and_cast<const LoRaTransmission *>(transmission);
-//    auto *loRaApp = check_and_cast<SimpleLoRaApp *>(getParentModule()->getParentModule()->getSubmodule("SimpleLoRaApp"));
     auto *loRaRadio = check_and_cast<LoRaRadio *>(getParentModule());
-//    auto node = getContainingNode(this);
-//    auto loRaRadio = check_and_cast<LoRaRadio *>(node->getSubmodule("LoRaNic")->getSubmodule("LoRaRadio"));
     if(iAmGateway || (loRaTransmission->getLoRaCF() == loRaRadio->loRaCF && loRaTransmission->getLoRaBW() == loRaRadio->loRaBW && loRaTransmission->getLoRaSF() == loRaRadio->loRaSF))
         return true;
     else
@@ -106,7 +103,6 @@ bool LoRaReceiver::computeIsReceptionAttempted(const IListening *listening, cons
             if (rec == macLayer->getAddress()) {
                 const_cast<LoRaReceiver* >(this)->numCollisions++;
             }
-            //EV << "Node: Extracted macFrame = " << loraMacFrame->getReceiverAddress() << ", node address = " << macLayer->getAddress() << std::endl;
         } else {
             auto *gwMacLayer = check_and_cast<LoRaGWMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));
             EV << "GW: Extracted macFrame = " << rec << ", node address = " << gwMacLayer->getAddress() << std::endl;
@@ -122,14 +118,11 @@ bool LoRaReceiver::computeIsReceptionAttempted(const IListening *listening, cons
 
 bool LoRaReceiver::isPacketCollided(const IReception *reception, IRadioSignal::SignalPart part, const IInterference *interference) const
 {
-    //auto radio = reception->getReceiver();
-    //auto radioMedium = radio->getMedium();
     auto interferingReceptions = interference->getInterferingReceptions();
     const LoRaReception *loRaReception = check_and_cast<const LoRaReception *>(reception);
     simtime_t m_x = (loRaReception->getStartTime() + loRaReception->getEndTime())/2;
     simtime_t d_x = (loRaReception->getEndTime() - loRaReception->getStartTime())/2;
     EV << "Czas transmisji to " << loRaReception->getEndTime() - loRaReception->getStartTime() << endl;
-    // double P_threshold = 6;
     W signalRSSI_w = loRaReception->getPower();
     double signalRSSI_mw = signalRSSI_w.get()*1000;
     double signalRSSI_dBm = math::mW2dBmW(signalRSSI_mw);
@@ -219,7 +212,6 @@ Packet *LoRaReceiver::computeReceivedPacket(const ISnir *snir, bool isReceptionS
     auto transmittedPacket = snir->getReception()->getTransmission()->getPacket();
     auto receivedPacket = transmittedPacket->dup();
     receivedPacket->clearTags();
-//    receivedPacket->addTag<PacketProtocolTag>()->setProtocol(transmittedPacket->getTag<PacketProtocolTag>()->getProtocol());
     if (!isReceptionSuccessful)
         receivedPacket->setBitError(true);
     return receivedPacket;
@@ -262,7 +254,6 @@ const IListening *LoRaReceiver::createListening(const IRadio *radio, const simti
     if(iAmGateway == false)
     {
         auto node = getContainingNode(this);
-//        auto loRaApp = check_and_cast<SimpleLoRaApp *>(node->getSubmodule("SimpleLoRaApp"));
         auto loRaRadio = check_and_cast<LoRaRadio *>(node->getSubmodule("LoRaNic")->getSubmodule("radio"));
         return new LoRaBandListening(radio, startTime, endTime, startPosition, endPosition, loRaRadio->loRaCF, loRaRadio->loRaBW, loRaRadio->loRaSF);
     }

@@ -56,10 +56,7 @@ std::ostream& LoRaTransmitter::printToStream(std::ostream& stream, int level, in
 
 const ITransmission *LoRaTransmitter::createTransmission(const IRadio *transmitter, const Packet *macFrame, const simtime_t startTime) const
 {
-//    TransmissionBase *controlInfo = dynamic_cast<TransmissionBase *>(macFrame->getControlInfo());
-    //W transmissionPower = controlInfo && !std::isnan(controlInfo->getPower().get()) ? controlInfo->getPower() : power;
     const_cast<LoRaTransmitter* >(this)->emit(LoRaTransmissionCreated, true);
-//    const LoRaMacFrame *frame = check_and_cast<const LoRaMacFrame *>(macFrame);
     EV << macFrame->getDetailStringRepresentation(evFlags) << endl;
     const auto &frame = macFrame->peekAtFront<LoRaPhyPreamble>();
 
@@ -67,7 +64,6 @@ const ITransmission *LoRaTransmitter::createTransmission(const IRadio *transmitt
     simtime_t Tsym = (pow(2, frame->getSpreadFactor()))/(frame->getBandwidth().get()/1000);
     simtime_t Tpreamble = (nPreamble + 4.25) * Tsym / 1000;
 
-    //preambleDuration = Tpreamble;
     int payloadBytes = 0;
     if(iAmGateway) payloadBytes = 15;
     else payloadBytes = 20;

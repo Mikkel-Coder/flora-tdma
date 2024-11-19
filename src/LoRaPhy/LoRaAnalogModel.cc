@@ -32,7 +32,6 @@ std::ostream& LoRaAnalogModel::printToStream(std::ostream& stream, int level, in
 }
 
 const W LoRaAnalogModel::getBackgroundNoisePower(const LoRaBandListening *listening) const {
-    //const LoRaBandListening *loRaListening = check_and_cast<const LoRaBandListening *>(listening);
     //Sensitivity values from Semtech SX1272/73 datasheet, table 10, Rev 3.1, March 2017
     W noisePower = W(math::dBmW2mW(-126.5) / 1000);
     if(listening->getLoRaSF() == 6)
@@ -85,16 +84,9 @@ const W LoRaAnalogModel::getBackgroundNoisePower(const LoRaBandListening *listen
 W LoRaAnalogModel::computeReceptionPower(const IRadio *receiverRadio, const ITransmission *transmission, const IArrival *arrival) const
 {
     const IRadioMedium *radioMedium = receiverRadio->getMedium();
-//    const IRadio *transmitterRadio = transmission->getTransmitter();
-//    const IAntenna *receiverAntenna = receiverRadio->getAntenna();
-//    const IAntenna *transmitterAntenna = transmitterRadio->getAntenna();
     const INarrowbandSignal *narrowbandSignalAnalogModel = check_and_cast<const INarrowbandSignal *>(transmission->getAnalogModel());
     const IScalarSignal *scalarSignalAnalogModel = check_and_cast<const IScalarSignal *>(transmission->getAnalogModel());
     const Coord receptionStartPosition = arrival->getStartPosition();
-    // const Coord receptionEndPosition = arrival->getEndPosition();
-//    const Quaternion transmissionDirection = computeTransmissionDirection(transmission, arrival);
-//    const Quaternion transmissionAntennaDirection = transmission->getStartOrientation() - transmissionDirection;
-//    const Quaternion receptionAntennaDirection = transmissionDirection - arrival->getStartOrientation();
     double transmitterAntennaGain = computeAntennaGain(transmission->getTransmitterAntennaGain(), transmission->getStartPosition(), arrival->getStartPosition(), transmission->getStartOrientation());
     double receiverAntennaGain = computeAntennaGain(receiverRadio->getAntenna()->getGain().get(), arrival->getStartPosition(), transmission->getStartPosition(), arrival->getStartOrientation());
     double pathLoss = radioMedium->getPathLoss()->computePathLoss(transmission, arrival);
