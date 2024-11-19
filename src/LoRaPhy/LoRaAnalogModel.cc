@@ -91,7 +91,7 @@ W LoRaAnalogModel::computeReceptionPower(const IRadio *receiverRadio, const ITra
     const INarrowbandSignal *narrowbandSignalAnalogModel = check_and_cast<const INarrowbandSignal *>(transmission->getAnalogModel());
     const IScalarSignal *scalarSignalAnalogModel = check_and_cast<const IScalarSignal *>(transmission->getAnalogModel());
     const Coord receptionStartPosition = arrival->getStartPosition();
-    const Coord receptionEndPosition = arrival->getEndPosition();
+    // const Coord receptionEndPosition = arrival->getEndPosition();
 //    const Quaternion transmissionDirection = computeTransmissionDirection(transmission, arrival);
 //    const Quaternion transmissionAntennaDirection = transmission->getStartOrientation() - transmissionDirection;
 //    const Quaternion receptionAntennaDirection = transmissionDirection - arrival->getStartOrientation();
