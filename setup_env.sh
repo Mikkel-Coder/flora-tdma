@@ -1,9 +1,15 @@
 echo "[+] Sourcing the setenvs"
-source $PWD/../../setenv
-source $PWD/../inet4.4/setenv
+source $PWD/../../setenv && \
+source $PWD/../inet4.4/setenv && \
 
-echo "[+] Setting functions"
-CORES=$(nproc)
+echo "[+] Doing makefile generation" && \
+OLDPWD=$PWD && \
+cd $PWD/../.. && \
+make makefiles && \
+
+echo "[+] Setting functions" && \
+CORES=$(nproc) || \
+exit 1
 
 function rebuild_inet() {
 	OLDPWD=$PWD && \
