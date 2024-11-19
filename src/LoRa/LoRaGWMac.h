@@ -41,7 +41,6 @@ public:
     cMessage *dutyCycleTimer;
     virtual void initialize(int stage) override;
     virtual void finish() override;
-    //virtual InterfaceEntry *createInterfaceEntry();
     virtual void configureNetworkInterface() override;
     long GW_forwardedDown;
     long GW_droppedDC;
