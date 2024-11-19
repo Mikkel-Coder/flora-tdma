@@ -21,7 +21,6 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IAntenna.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadioMedium.h"
-//#include "inet/physicallayer/wireless/common/base/packetlevel/FlatRadioBase.h"
 #include "inet/physicallayer/wireless/common/base/packetlevel/NarrowbandRadioBase.h"
 
 using namespace inet;
@@ -29,7 +28,7 @@ using namespace inet::physicallayer;
 
 namespace flora {
 
-class LoRaRadio : public NarrowbandRadioBase //: public PhysicalLayerBase, public virtual IRadio
+class LoRaRadio : public NarrowbandRadioBase
 {
 public:
   static simsignal_t minSNIRSignal;
@@ -43,7 +42,6 @@ public:
    * An identifier which is globally unique for the whole lifetime of the
    * simulation among all radios.
    */
-//  double currentTxPower;
   //LoRa physical layer parameters
   double loRaTP;
   units::values::Hz loRaCF;
@@ -61,36 +59,8 @@ protected:
 
   virtual void handleMessageWhenDown(cMessage *message) override;
   virtual void handleMessageWhenUp(cMessage *message) override;
-  virtual void handleSelfMessage(cMessage *message) override;
-  virtual void handleTransmissionTimer(cMessage *message) override;
-  virtual void handleReceptionTimer(cMessage *message) override;
-  virtual void handleUpperCommand(cMessage *command) override;
-  virtual void handleLowerCommand(cMessage *command) override;
   virtual void handleUpperPacket(Packet *packet) override;
-  //virtual void handleLowerPacket(RadioFrame *packet) override;
-  virtual void handleSignal(WirelessSignal *signal) override;
-  //virtual bool handleNodeStart(IDoneCallback *doneCallback) override;
-  //virtual bool handleNodeShutdown(IDoneCallback *doneCallback) override;
-  //virtual void handleNodeCrash() override;
-
-  //virtual void handleStartOperation(LifecycleOperation *operation) override;
-  //virtual void handleStopOperation(LifecycleOperation *operation) override;
-  //virtual void handleCrashOperation(LifecycleOperation *operation) override;
-
-
-  virtual void startTransmission(Packet *macFrame, IRadioSignal::SignalPart part) override;
-  virtual void continueTransmission() override;
-  virtual void endTransmission() override;
-  virtual void abortTransmission() override;
-
-  virtual WirelessSignal *createSignal(Packet *packet) const override;
-
-  virtual void startReception(cMessage *timer, IRadioSignal::SignalPart part) override;
-  virtual void continueReception(cMessage *timer) override;
   virtual void endReception(cMessage *timer) override;
-  virtual void abortReception(cMessage *timer) override;
-  virtual void captureReception(cMessage *timer) override;
-
   virtual void sendUp(Packet *macFrame) override;
 
 public:
@@ -98,8 +68,6 @@ public:
   virtual ~LoRaRadio();
 
   bool iAmGateway;
-//  double getCurrentTxPower();
-//  void setCurrentTxPower(double txPower);
 
   std::list<cMessage *>concurrentReceptions;
 
@@ -119,15 +87,9 @@ public:
   virtual ReceptionState getReceptionState() const override { return receptionState; }
   virtual TransmissionState getTransmissionState() const override { return transmissionState; }
 
-  virtual const ITransmission *getTransmissionInProgress() const override;
-  virtual const ITransmission *getReceptionInProgress() const override;
-
-  virtual IRadioSignal::SignalPart getTransmittedSignalPart() const override;
-  virtual IRadioSignal::SignalPart getReceivedSignalPart() const override;
-
   virtual void decapsulate(Packet *packet) const override;
 };
 
-} // namespace inet
+} // namespace flora
 
 #endif /* LORA_LORARADIO_H_ */

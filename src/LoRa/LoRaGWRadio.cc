@@ -71,7 +71,7 @@ bool LoRaGWRadio::isTransmissionTimer(const cMessage *message) const
 
 void LoRaGWRadio::handleTransmissionTimer(cMessage *message)
 {
-    /* This is the same as IRadios implementation */
+    /* Almost the same as Radio, but we use message in transmission */
     if (message->getKind() == IRadioSignal::SIGNAL_PART_WHOLE)
         endTransmission(message);
     else if (message->getKind() == IRadioSignal::SIGNAL_PART_PREAMBLE)

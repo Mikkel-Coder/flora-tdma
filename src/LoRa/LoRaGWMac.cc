@@ -17,8 +17,6 @@
 #include "inet/common/ModuleAccess.h"
 #include "../LoRaPhy/LoRaPhyPreamble_m.h"
 #include "inet/common/ProtocolTag_m.h"
-
-
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
 
 

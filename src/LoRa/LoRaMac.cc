@@ -93,7 +93,7 @@ void LoRaMac::initialize(int stage)
         mediumStateChange = new cMessage("MediumStateChange");
 
         // set up internal queue
-        txQueue = getQueue(gate(upperLayerInGateId));//check_and_cast<queueing::IPacketQueue *>(getSubmodule("queue"));
+        txQueue = getQueue(gate(upperLayerInGateId));
 
         // state variables
         fsm.setName("LoRaMac State Machine");
@@ -474,7 +474,7 @@ bool LoRaMac::isReceiving()
 bool LoRaMac::isAck(const Ptr<const LoRaMacFrame> &frame)
 {
     /* Not needed for TDMA */
-    return false;//dynamic_cast<LoRaMacFrame *>(frame); // Why?
+    return false;
 }
 
 bool LoRaMac::isBroadcast(const Ptr<const LoRaMacFrame> &frame)

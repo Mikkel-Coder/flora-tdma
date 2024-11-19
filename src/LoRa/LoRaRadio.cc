@@ -61,39 +61,9 @@ std::ostream& LoRaRadio::printToStream(std::ostream& stream, int level, int evFl
     return stream;
 }
 
-
-const ITransmission *LoRaRadio::getTransmissionInProgress() const
-{
-    if (!transmissionTimer->isScheduled()) {
-        return nullptr;
-    }
-    else {
-        return static_cast<WirelessSignal *>(transmissionTimer->getContextPointer())->getTransmission();
-    }
-}
-
-const ITransmission *LoRaRadio::getReceptionInProgress() const
-{
-    if (receptionTimer == nullptr) {
-        return nullptr;
-    }
-    else {
-        return static_cast<WirelessSignal *>(receptionTimer->getControlInfo())->getTransmission();
-    }
-}
-
-IRadioSignal::SignalPart LoRaRadio::getTransmittedSignalPart() const
-{
-    return transmittedSignalPart;
-}
-
-IRadioSignal::SignalPart LoRaRadio::getReceivedSignalPart() const
-{
-    return receivedSignalPart;
-}
-
 void LoRaRadio::handleMessageWhenDown(cMessage *message)
 {
+    /* Almost the same as Radio's expect we use a different name space */
     if (message->getArrivalGate() == radioIn || isReceptionTimer(message)) {
         delete message;
     }
@@ -124,62 +94,6 @@ void LoRaRadio::handleMessageWhenUp(cMessage *message)
     }
     else
         throw cRuntimeError("Unknown arrival gate '%s'.", message->getArrivalGate()->getFullName());
-}
-
-void LoRaRadio::handleSelfMessage(cMessage *message)
-{
-    /* This should be removed */
-    NarrowbandRadioBase::handleSelfMessage(message);
-}
-
-void LoRaRadio::handleTransmissionTimer(cMessage *message)
-{
-    /* I guess that this is the same for inets NarrowBandradio::handleTransmisionTimer.
-     * If so, then remove this
-     */
-    if (message->getKind() == IRadioSignal::SIGNAL_PART_WHOLE)
-        endTransmission();
-    else if (message->getKind() == IRadioSignal::SIGNAL_PART_PREAMBLE)
-        continueTransmission();
-    else if (message->getKind() == IRadioSignal::SIGNAL_PART_HEADER)
-        continueTransmission();
-    else if (message->getKind() == IRadioSignal::SIGNAL_PART_DATA)
-        endTransmission();
-    else
-        throw cRuntimeError("Unknown self message");
-}
-
-void LoRaRadio::handleReceptionTimer(cMessage *message)
-{
-     /* I guess that this is the same for inets NarrowBandradio::handleReceptionTimer.
-     * If so, then remove this
-     */
-    if (message->getKind() == IRadioSignal::SIGNAL_PART_WHOLE)
-        endReception(message);
-    else if (message->getKind() == IRadioSignal::SIGNAL_PART_PREAMBLE)
-        continueReception(message);
-    else if (message->getKind() == IRadioSignal::SIGNAL_PART_HEADER)
-        continueReception(message);
-    else if (message->getKind() == IRadioSignal::SIGNAL_PART_DATA)
-        endReception(message);
-    else
-        throw cRuntimeError("Unknown self message");
-}
-
-void LoRaRadio::handleUpperCommand(cMessage *message)
-{
-    if (message->getKind() == RADIO_C_CONFIGURE) {
-        ConfigureRadioCommand *configureCommand = check_and_cast<ConfigureRadioCommand *>(message->getControlInfo());
-        if (configureCommand->getRadioMode() != -1)
-            setRadioMode((RadioMode)configureCommand->getRadioMode());
-    }
-    else
-        throw cRuntimeError("Unsupported command");
-}
-
-void LoRaRadio::handleLowerCommand(cMessage *message)
-{
-    throw cRuntimeError("Unsupported command");
 }
 
 void LoRaRadio::handleUpperPacket(Packet *packet)
@@ -215,57 +129,6 @@ void LoRaRadio::handleUpperPacket(Packet *packet)
         EV_ERROR << "Radio is not in transmitter or transceiver mode, dropping frame." << endl;
         delete packet;
     }
-}
-
-void LoRaRadio::handleSignal(WirelessSignal *radioFrame)
-{
-    auto receptionTimer = createReceptionTimer(radioFrame);
-    if (separateReceptionParts)
-        startReception(receptionTimer, IRadioSignal::SIGNAL_PART_PREAMBLE);
-    else
-        startReception(receptionTimer, IRadioSignal::SIGNAL_PART_WHOLE);
-}
-
-void LoRaRadio::startTransmission(Packet *macFrame, IRadioSignal::SignalPart part)
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::startTransmission(macFrame, part);
-}
-
-void LoRaRadio::continueTransmission()
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::continueTransmission();
-}
-
-void LoRaRadio::endTransmission()
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::endTransmission();
-}
-
-void LoRaRadio::abortTransmission()
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::abortTransmission();
-}
-
-WirelessSignal *LoRaRadio::createSignal(Packet *packet) const
-{
-    /* This should use NarrowBandRadio method instead */
-    return NarrowbandRadioBase::createSignal(packet);
-}
-
-void LoRaRadio::startReception(cMessage *timer, IRadioSignal::SignalPart part)
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::startReception(timer, part);
-}
-
-void LoRaRadio::continueReception(cMessage *timer)
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::continueReception(timer);
 }
 
 void LoRaRadio::decapsulate(Packet *packet) const
@@ -314,18 +177,6 @@ void LoRaRadio::endReception(cMessage *timer)
     delete timer;
     // TODO: move to radio medium. It is already done?
     check_and_cast<RadioMedium *>(medium.get())->emit(IRadioMedium::signalArrivalEndedSignal, check_and_cast<const cObject *>(reception));
-}
-
-void LoRaRadio::abortReception(cMessage *timer)
-{
-    /* This should use NarrowBandRadio method instead */
-    NarrowbandRadioBase::abortReception(timer);
-}
-
-void LoRaRadio::captureReception(cMessage *timer)
-{
-    // TODO: this would be called when the receiver switches to a stronger signal while receiving a weaker one
-    throw cRuntimeError("Not yet implemented");
 }
 
 void LoRaRadio::sendUp(Packet *macFrame)
