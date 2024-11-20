@@ -22,7 +22,7 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IMediumLimitCache.h"
 #include "LoRaPhy/LoRaMedium.h"
 
-namespace flora {
+namespace flora_tdma {
 
 class LoRaMediumCache : public cModule, public IMediumLimitCache
 {

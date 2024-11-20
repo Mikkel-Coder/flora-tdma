@@ -21,7 +21,7 @@ import inet.common.INETDefs;
 import inet.common.Units;
 import inet.linklayer.common.MacAddress;
 
-namespace flora;
+namespace flora_tdma;
 
 cplusplus {{
 using namespace inet;

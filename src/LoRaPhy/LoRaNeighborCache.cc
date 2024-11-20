@@ -18,7 +18,7 @@
 #include "LoRaPhy/LoRaNeighborCache.h"
 #include "inet/common/ModuleAccess.h"
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaNeighborCache);
 

@@ -15,7 +15,7 @@
 // along with this program; if not, see <http://www.gnu.org/licenses/>.
 //
 
-package flora.LoRaPhy;
+package flora_tdma.LoRaPhy;
 
 import inet.physicallayer.wireless.common.contract.packetlevel.IMediumLimitCache;
 

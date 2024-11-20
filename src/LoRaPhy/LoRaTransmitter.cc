@@ -20,7 +20,7 @@
 #include <algorithm>
 
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaTransmitter);
 
@@ -41,7 +41,7 @@ void LoRaTransmitter::initialize(int stage)
         bandwidth = Hz(par("bandwidth"));
         LoRaTransmissionCreated = registerSignal("LoRaTransmissionCreated");
 
-        if(strcmp(getParentModule()->getClassName(), "flora::LoRaGWRadio") == 0)
+        if(strcmp(getParentModule()->getClassName(), "flora_tdma::LoRaGWRadio") == 0)
         {
             iAmGateway = true;
         } else iAmGateway = false;

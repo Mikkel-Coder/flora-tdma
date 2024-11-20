@@ -13,12 +13,12 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRa;
+package flora_tdma.LoRa;
 
 import inet.linklayer.contract.IWirelessInterface;
 import inet.linklayer.common.WirelessInterface;
 
-import flora.LoRaPhy.LoRaMedium;
+import flora_tdma.LoRaPhy.LoRaMedium;
 
 module LoRaGWNic extends WirelessInterface
 {

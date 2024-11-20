@@ -29,7 +29,7 @@
 using namespace omnetpp;
 using namespace inet;
 
-namespace flora {
+namespace flora_tdma {
 
 /**
  * TODO - Generated class

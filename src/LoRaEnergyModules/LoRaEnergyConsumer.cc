@@ -17,7 +17,7 @@
 
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
 #include "LoRaPhy/LoRaTransmitter.h"
-namespace flora {
+namespace flora_tdma {
 
 using namespace inet::power;
 

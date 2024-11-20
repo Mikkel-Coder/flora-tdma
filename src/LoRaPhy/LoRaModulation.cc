@@ -15,7 +15,7 @@
 
 #include "LoRaModulation.h"
 
-namespace flora {
+namespace flora_tdma {
 
 const std::vector<ApskSymbol> LoRaModulation::constellation = {};
 

@@ -23,7 +23,7 @@
 
 using namespace inet;
 
-namespace flora {
+namespace flora_tdma {
 
 class LoRaEnergyConsumer: public inet::physicallayer::StateBasedEpEnergyConsumer {
 public:

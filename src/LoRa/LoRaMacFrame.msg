@@ -22,7 +22,7 @@ cplusplus {{
 using namespace inet;
 }}
 
-namespace flora;
+namespace flora_tdma;
 
 class LoRaMacFrame extends inet::FieldsChunk {
     inet::MacAddress transmitterAddress;

@@ -22,7 +22,7 @@
 
 #include "LoRaBandListening.h"
 
-namespace flora {
+namespace flora_tdma {
 
 class LoRaAnalogModel : public ScalarAnalogModelBase
 {

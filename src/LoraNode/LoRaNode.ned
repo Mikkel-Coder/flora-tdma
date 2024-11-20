@@ -13,12 +13,12 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoraNode;
+package flora_tdma.LoraNode;
 
 import inet.mobility.static.StationaryMobility;
 import inet.networklayer.common.InterfaceTable;
 import inet.applications.contract.IApp;
-import flora.LoRa.LoRaNic;
+import flora_tdma.LoRa.LoRaNic;
 
 
 module LoRaNode

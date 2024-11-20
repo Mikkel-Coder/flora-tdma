@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.PacketForwarder;
+package flora_tdma.PacketForwarder;
 
 
 import inet.applications.contract.IApp;

@@ -1,5 +1,5 @@
-package flora;
+package flora_tdma;
 
-@namespace(flora);
+@namespace(flora_tdma);
 
 @license(LGPL);

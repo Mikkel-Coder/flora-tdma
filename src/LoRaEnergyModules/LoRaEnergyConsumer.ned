@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRaEnergyModules;
+package flora_tdma.LoRaEnergyModules;
 
 import inet.physicallayer.wireless.common.energyconsumer.StateBasedEpEnergyConsumer;
 

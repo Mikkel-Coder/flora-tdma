@@ -22,7 +22,7 @@ cplusplus {{
 using namespace inet;
 }}
 
-namespace flora;
+namespace flora_tdma;
 
 class LoRaPhyPreamble extends inet::FieldsChunk {
     inet::Hz centerFrequency;

@@ -22,7 +22,7 @@
 #include <set>
 #include <vector>
 
-namespace flora {
+namespace flora_tdma {
 
 class LoRaNeighborCache : public cSimpleModule, public INeighborCache
 {

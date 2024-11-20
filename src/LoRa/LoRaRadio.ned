@@ -13,10 +13,10 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRa;
+package flora_tdma.LoRa;
 
-import flora.LoRaPhy.LoRaTransmitter;
-import flora.LoRaPhy.LoRaReceiver;
+import flora_tdma.LoRaPhy.LoRaTransmitter;
+import flora_tdma.LoRaPhy.LoRaReceiver;
 //import inet.physicallayer.wireless.common.base.packetlevel.FlatRadioBase;
 import inet.physicallayer.wireless.common.base.packetlevel.NarrowbandRadioBase;
 import inet.power.storage.IdealEpEnergyStorage;

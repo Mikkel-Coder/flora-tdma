@@ -20,7 +20,7 @@
 #include "LoRaPhy/LoRaMedium.h"
 #include "LoRaPhy/LoRaLogNormalShadowing.h"
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaMediumCache);
 

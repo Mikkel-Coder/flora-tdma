@@ -22,7 +22,7 @@
 #include "LoRa/LoRaRadio.h"
 #include "LoRa/LoRaMacFrame_m.h"
 
-namespace flora {
+namespace flora_tdma {
 
 class LoRaTransmitter : public FlatTransmitterBase {
     public:

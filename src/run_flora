@@ -5,4 +5,4 @@ fi
 
 PATH=$INET_ROOT/src:$PATH
 
-opp_run -l ../src/flora -n .:../src:$INET_ROOT/src "$@"
+opp_run -l ../src/flora-tdma -n .:../src:$INET_ROOT/src "$@"

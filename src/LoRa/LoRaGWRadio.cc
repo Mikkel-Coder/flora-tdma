@@ -19,7 +19,7 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
 
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaGWRadio);
 

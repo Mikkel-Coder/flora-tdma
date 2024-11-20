@@ -13,16 +13,16 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoraNode;
+package flora_tdma.LoraNode;
 
 import inet.node.contract.INetworkNode;
 import inet.mobility.static.StationaryMobility;
 import inet.networklayer.common.InterfaceTable;
 import inet.networklayer.contract.INetworkLayer;
 import inet.linklayer.loopback.LoopbackInterface;
-import flora.LoRa.LoRaGWNic;
-import flora.LoRaApp.SimpleLoRaApp;
-import flora.PacketForwarder.PacketForwarder;
+import flora_tdma.LoRa.LoRaGWNic;
+import flora_tdma.LoRaApp.SimpleLoRaApp;
+import flora_tdma.PacketForwarder.PacketForwarder;
 import inet.linklayer.contract.IEthernetInterface;
 import inet.applications.contract.IApp;
 import inet.transportlayer.contract.IUdp;

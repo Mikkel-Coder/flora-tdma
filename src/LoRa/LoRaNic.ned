@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRa;
+package flora_tdma.LoRa;
 
 import inet.linklayer.common.WirelessInterface;
 

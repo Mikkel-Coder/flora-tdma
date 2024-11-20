@@ -30,7 +30,7 @@
 #if INET_VERSION < 0x0403 || ( INET_VERSION == 0x0403 && INET_PATCH_LEVEL == 0x00 )
 #  error At least INET 4.3.1 is required. Please update your INET dependency and fully rebuild the project.
 #endif
-namespace flora {
+namespace flora_tdma {
 
 using namespace inet;
 using namespace inet::physicallayer;

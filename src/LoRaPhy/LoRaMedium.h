@@ -30,7 +30,7 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadioMedium.h"
 #include <algorithm>
 
-namespace flora {
+namespace flora_tdma {
 class LoRaMedium : public RadioMedium
 {
     friend class LoRaGWRadio;

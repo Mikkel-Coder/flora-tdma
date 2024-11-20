@@ -16,7 +16,7 @@
 #include "LoRaLogNormalShadowing.h"
 #include "inet/common/INETMath.h"
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaLogNormalShadowing);
 

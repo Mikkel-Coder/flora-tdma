@@ -20,7 +20,7 @@
 
 using namespace inet;
 using namespace inet::physicallayer;
-namespace flora {
+namespace flora_tdma {
 
 /**
  * This class implements the log normal shadowing model.

@@ -26,7 +26,7 @@
 #include "inet/linklayer/common/InterfaceTag_m.h"
 
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaMac);
 

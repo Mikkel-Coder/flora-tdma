@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.NetworkServer;
+package flora_tdma.NetworkServer;
 import inet.applications.contract.IApp;
 
 simple NetworkServerApp like IApp

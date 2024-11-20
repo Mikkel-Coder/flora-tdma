@@ -29,7 +29,7 @@
 
 /* Almost the same as LoRaGWRadio.cc */
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaRadio);
 

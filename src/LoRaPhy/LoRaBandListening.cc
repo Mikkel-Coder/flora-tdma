@@ -15,7 +15,7 @@
 
 #include "LoRaBandListening.h"
 
-namespace flora {
+namespace flora_tdma {
 
 LoRaBandListening::LoRaBandListening(const IRadio *radio, simtime_t startTime, simtime_t endTime, Coord startPosition, Coord endPosition,  Hz centerFrequency, Hz bandwidth, int LoRaSF) :
         BandListening(radio, startTime, endTime, startPosition, endPosition, centerFrequency, bandwidth),

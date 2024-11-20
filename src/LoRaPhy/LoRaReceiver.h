@@ -38,7 +38,7 @@
 
 //based on Ieee802154UWBIRReceiver
 
-namespace flora {
+namespace flora_tdma {
 
 class LoRaReceiver : public FlatReceiverBase
 

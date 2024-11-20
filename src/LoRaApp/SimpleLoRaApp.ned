@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRaApp;
+package flora_tdma.LoRaApp;
 
 import inet.applications.contract.IApp;
 

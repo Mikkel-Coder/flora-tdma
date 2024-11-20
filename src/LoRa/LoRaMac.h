@@ -15,7 +15,7 @@
 
 #include "LoRaRadio.h"
 
-namespace flora {
+namespace flora_tdma {
 
 using namespace physicallayer;
 

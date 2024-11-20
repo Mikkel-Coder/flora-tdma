@@ -20,7 +20,7 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
 
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaGWMac);
 

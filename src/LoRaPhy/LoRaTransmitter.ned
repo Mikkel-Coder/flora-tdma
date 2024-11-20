@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRaPhy;
+package flora_tdma.LoRaPhy;
 
 import inet.physicallayer.wireless.common.base.packetlevel.NarrowbandTransmitterBase;
 

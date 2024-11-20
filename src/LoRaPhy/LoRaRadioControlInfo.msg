@@ -26,7 +26,7 @@ cplusplus {{
 using namespace inet;
 }}
 
-namespace flora;
+namespace flora_tdma;
 
 //
 // Message kinds for sending commands to the radio.

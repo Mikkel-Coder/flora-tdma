@@ -29,7 +29,7 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IErrorModel.h"
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaMedium);
 

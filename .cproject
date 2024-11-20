@@ -105,10 +105,10 @@
 		<configuration configurationName="debug"/>
 		<configuration configurationName="release"/>
 		<configuration configurationName="gcc-release">
-			<resource resourceType="PROJECT" workspacePath="/flora"/>
+			<resource resourceType="PROJECT" workspacePath="/flora-tdma"/>
 		</configuration>
 		<configuration configurationName="gcc-debug">
-			<resource resourceType="PROJECT" workspacePath="/flora"/>
+			<resource resourceType="PROJECT" workspacePath="/flora-tdma"/>
 		</configuration>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>

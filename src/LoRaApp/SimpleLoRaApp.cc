@@ -19,7 +19,7 @@
 #include "inet/common/packet/Packet.h"
 
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(SimpleLoRaApp);
 

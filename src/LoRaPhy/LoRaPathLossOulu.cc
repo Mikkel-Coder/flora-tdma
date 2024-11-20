@@ -15,7 +15,7 @@
 
 #include "LoRaPathLossOulu.h"
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaPathLossOulu);
 

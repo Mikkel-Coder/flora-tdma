@@ -20,7 +20,7 @@
 import inet.common.INETDefs;
 import inet.common.packet.chunk.Chunk;
 
-namespace flora;
+namespace flora_tdma;
 
 enum AppPacketType
 {

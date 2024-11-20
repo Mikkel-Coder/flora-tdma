@@ -20,7 +20,7 @@
 #include "LoRaPhyPreamble_m.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
 
-namespace flora {
+namespace flora_tdma {
 
 Define_Module(LoRaReceiver);
 
@@ -36,7 +36,7 @@ void LoRaReceiver::initialize(int stage)
     {
         snirThreshold = math::dB2fraction(par("snirThreshold"));
         energyDetection = mW(math::dBmW2mW(par("energyDetection")));
-        if(strcmp(getParentModule()->getClassName(), "flora::LoRaGWRadio") == 0)
+        if(strcmp(getParentModule()->getClassName(), "flora_tdma::LoRaGWRadio") == 0)
         {
             iAmGateway = true;
         } else iAmGateway = false;
