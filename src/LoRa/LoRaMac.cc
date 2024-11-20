@@ -41,6 +41,8 @@ LoRaMac::~LoRaMac()
     cancelAndDelete(endDelay_2);
     cancelAndDelete(endListening_2);
     cancelAndDelete(mediumStateChange);
+
+    /* What about the Queue? Perhaps clearQueue() */
 }
 
 /*
@@ -97,63 +99,68 @@ void LoRaMac::initialize(int stage)
 
         // state variables
         fsm.setName("LoRaMac State Machine");
-        backoffPeriod = -1;
-        retryCounter = 0;
+        backoffPeriod = -1; // not used
+        retryCounter = 0; // Not used
 
         // sequence number for messages
         sequenceNumber = 0;
 
         // statistics
-        numRetry = 0;
-        numSentWithoutRetry = 0;
-        numGivenUp = 0;
-        numCollision = 0;
+        numRetry = 0; // not used
+        numSentWithoutRetry = 0; // not used
+        numGivenUp = 0; // not used
+        numCollision = 0; // not used
         numSent = 0;
         numReceived = 0;
-        numSentBroadcast = 0;
-        numReceivedBroadcast = 0;
+        numSentBroadcast = 0; // not used
+        numReceivedBroadcast = 0; // not used
 
         // initialize watches
         WATCH(fsm);
-        WATCH(backoffPeriod);
-        WATCH(retryCounter);
-        WATCH(numRetry);
-        WATCH(numSentWithoutRetry);
-        WATCH(numGivenUp);
-        WATCH(numCollision);
+        WATCH(backoffPeriod); // not used
+        WATCH(retryCounter); // not used
+        WATCH(numRetry); // not used
+        WATCH(numSentWithoutRetry); // not used
+        WATCH(numGivenUp); // not used
+        WATCH(numCollision); // not used
         WATCH(numSent);
         WATCH(numReceived);
-        WATCH(numSentBroadcast);
-        WATCH(numReceivedBroadcast);
+        WATCH(numSentBroadcast); // not used
+        WATCH(numReceivedBroadcast); // not used
     }
+    // TODO: Use the function isInitializeStage()
     else if (stage == INITSTAGE_LINK_LAYER)
         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 }
 
 void LoRaMac::finish()
 {
-    recordScalar("numRetry", numRetry);
-    recordScalar("numSentWithoutRetry", numSentWithoutRetry);
-    recordScalar("numGivenUp", numGivenUp);
-    //recordScalar("numCollision", numCollision);
+    recordScalar("numRetry", numRetry); // Not used
+    recordScalar("numSentWithoutRetry", numSentWithoutRetry); // not used
+    recordScalar("numGivenUp", numGivenUp); // not used
+    //recordScalar("numCollision", numCollision); // not used
     recordScalar("numSent", numSent);
     recordScalar("numReceived", numReceived);
-    recordScalar("numSentBroadcast", numSentBroadcast);
-    recordScalar("numReceivedBroadcast", numReceivedBroadcast);
+    recordScalar("numSentBroadcast", numSentBroadcast); // not used
+    recordScalar("numReceivedBroadcast", numReceivedBroadcast); // not used
 }
 
+/*
+ * Configures the Inet interface to represent LoRa's capabilities. 
+ */
 void LoRaMac::configureNetworkInterface()
 {
-    // data rate
+    // Set the bitrate limit. By default no limit
     networkInterface->setDatarate(bitrate);
+
+    // Adds an IEEE 802 MAC address
     networkInterface->setMacAddress(address);
 
-    // capabilities
-    //interfaceEntry->setMtu(par("mtu"));
-    networkInterface->setMtu(std::numeric_limits<int>::quiet_NaN());
-    networkInterface->setMulticast(true);
+    // Capabilities of the physical interface with LoRa 
+    networkInterface->setMtu(std::numeric_limits<int>::quiet_NaN()); // There is no MTU limit in LoRa
+    networkInterface->setMulticast(true); // Because we are using wireless
     networkInterface->setBroadcast(true);
-    networkInterface->setPointToPoint(false);
+    networkInterface->setPointToPoint(false); // Because we are always broadcasting
 }
 
 /*
@@ -196,11 +203,17 @@ void LoRaMac::processUpperPacket()
     handleUpperMessage(packet);
 }
 
+/*
+ * Who uses this? Delete if possible
+ */
 queueing::IPassivePacketSource *LoRaMac::getProvider(cGate *gate)
 {
     return (gate->getId() == upperLayerInGateId) ? txQueue.get() : nullptr;
 }
 
+/*
+ * Check if this can be deleted/removed
+ */
 void LoRaMac::handleCanPullPacketChanged(cGate *gate)
 {
     Enter_Method("handleCanPullPacketChanged");
@@ -209,12 +222,18 @@ void LoRaMac::handleCanPullPacketChanged(cGate *gate)
     }
 }
 
+/*
+ * Check if this can be deleted/removed
+ */
 void LoRaMac::handlePullPacketProcessed(Packet *packet, cGate *gate, bool successful)
 {
     Enter_Method("handlePullPacketProcessed");
     throw cRuntimeError("Not supported callback");
 }
 
+/*
+ * This is used to handle a LoRaWAN class A end device with its 
+ */
 void LoRaMac::handleWithFsm(cMessage *msg)
 {
     Ptr<LoRaMacFrame>frame = nullptr;
@@ -252,6 +271,7 @@ void LoRaMac::handleWithFsm(cMessage *msg)
                                   LISTENING_1,
             );
         }
+        /* LoRaWAN window 1*/
         FSMA_State(LISTENING_1)
         {
             FSMA_Enter(turnOnReceiver());
@@ -266,7 +286,8 @@ void LoRaMac::handleWithFsm(cMessage *msg)
         }
         FSMA_State(RECEIVING_1)
         {
-            FSMA_Event_Transition(Receive-Unicast-Not-For,
+            /* Check if the frame not for us */
+            FSMA_Event_Transition(Receive-Unicast-Not-For, /* This name does not make any sense */
                                   isLowerMessage(msg) && !isForUs(frame),
                                   LISTENING_1,
             );
@@ -275,7 +296,7 @@ void LoRaMac::handleWithFsm(cMessage *msg)
                                   IDLE,
                 sendUp(decapsulate(pkt));
                 numReceived++;
-                cancelEvent(endListening_1);
+                cancelEvent(endListening_1); // LoRaWAN window 2 has been canceled and the rest
                 cancelEvent(endDelay_2);
                 cancelEvent(endListening_2);
             );
@@ -293,6 +314,7 @@ void LoRaMac::handleWithFsm(cMessage *msg)
                                   LISTENING_2,
             );
         }
+        /* LoRaWAN window 2*/
         FSMA_State(LISTENING_2)
         {
             FSMA_Enter(turnOnReceiver());
@@ -325,16 +347,25 @@ void LoRaMac::handleWithFsm(cMessage *msg)
         }
     }
 
+    /* If we are idle, check if we can continue by: */
     if (fsm.getState() == IDLE) {
+
+        /* if we are receiving, then change state in the FSM */
         if (isReceiving())
             handleWithFsm(mediumStateChange);
+
+        /* If we have something to process, then process it in the FSM */
         else if (currentTxFrame != nullptr)
             handleWithFsm(currentTxFrame);
+        
+        /* If someone form the upper layer has given us something*/
         else if (!txQueue->isEmpty()) {
+            /* Then process it (try it as a packet) */
             processUpperPacket();
         }
     }
 
+    /* God only knows what happens here */
     if (endSifs) {
         if (isLowerMessage(msg) && pkt->getOwner() == this && (endSifs->getContextPointer() != pkt))
             delete pkt;
@@ -346,27 +377,48 @@ void LoRaMac::handleWithFsm(cMessage *msg)
     getDisplayString().setTagArg("t", 0, fsm.getStateName());
 }
 
+/*
+ *  This is used to receive signalIDs from the LoRaRadio.
+ *  We update our own FSM and Radio to reflect the right states
+ */
 void LoRaMac::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)
 {
-    Enter_Method_Silent();
+    Enter_Method_Silent(); // this is an event but do not animate in GUI
+    
+    /* Check if we are receiving */
     if (signalID == IRadio::receptionStateChangedSignal) {
         IRadio::ReceptionState newRadioReceptionState = (IRadio::ReceptionState)value;
+
+        /* Remember to also change the FSM in the Radio to sleep */
+        /* BUG: We should check if the Radio is in TRANSMISSON_STATE_IDLE */
         if (receptionState == IRadio::RECEPTION_STATE_RECEIVING) {
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
         }
+
+        /* Now update our own FSM to the parsed state from Radio */
         receptionState = newRadioReceptionState;
-        handleWithFsm(mediumStateChange);
+        handleWithFsm(mediumStateChange); // Our own cMessage
     }
+
+    /* Check if we would drop the packet */
     else if (signalID == LoRaRadio::droppedPacket) {
+        /* If so then sleep the Radio and drop using our own FSM */
         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
         handleWithFsm(droppedPacket);
     }
+
+    /* Check if we are transmitting */
     else if (signalID == IRadio::transmissionStateChangedSignal) {
         IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
+
+        /* If our transmissionState is transmitting & our Radio state is idle */
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
+            /* Then end our current transmission state */
             handleWithFsm(endTransmission);
+            /* And update the Radio to sleep mode */
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
         }
+        /* And remember to update our */
         transmissionState = newRadioTransmissionState;
     }
 }
@@ -426,6 +478,9 @@ void LoRaMac::sendDataFrame(Packet *frameToSend)
     sendDown(frameCopy);
 }
 
+/*
+ * Who is using this? Delete if possible.
+ */
 void LoRaMac::sendAckFrame()
 {
     /* This should not be need for TDMA */
@@ -449,7 +504,7 @@ void LoRaMac::sendAckFrame()
 }
 
 /*
- * Helper functions.
+ * This is used to schedule LoRaWAN like receiving window 1 and 2 
  */
 void LoRaMac::finishCurrentTransmission()
 {
@@ -457,6 +512,7 @@ void LoRaMac::finishCurrentTransmission()
     scheduleAt(simTime() + waitDelay1Time + listening1Time, endListening_1);
     scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time, endDelay_2);
     scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time + listening2Time, endListening_2);
+    /* Remember to delete the old frame, as the copy has been sent successfully */
     deleteCurrentTxFrame();
 }
 
@@ -471,12 +527,18 @@ bool LoRaMac::isReceiving()
     return radio->getReceptionState() == IRadio::RECEPTION_STATE_RECEIVING;
 }
 
+/*
+ * Who is using this? Delete if possible 
+ */
 bool LoRaMac::isAck(const Ptr<const LoRaMacFrame> &frame)
 {
     /* Not needed for TDMA */
     return false;
 }
 
+/*
+ * Who is using this? Delete if possible
+ */
 bool LoRaMac::isBroadcast(const Ptr<const LoRaMacFrame> &frame)
 {
     return frame->getReceiverAddress().isBroadcast();
@@ -497,10 +559,13 @@ void LoRaMac::turnOnReceiver()
 void LoRaMac::turnOffReceiver()
 {
     LoRaRadio *loraRadio;
-    loraRadio = check_and_cast<LoRaRadio *>(radio);
+    loraRadio = check_and_cast<LoRaRadio *>(radio); /* This should be one line */
     loraRadio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
 }
 
+/*
+ * Do not delete. It is used in LoRaReceiver.cc
+ */
 MacAddress LoRaMac::getAddress()
 {
     return address;
