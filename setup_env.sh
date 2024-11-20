@@ -6,6 +6,7 @@ echo "[+] Doing makefile generation" && \
 OLDPWD=$PWD && \
 cd $PWD/../.. && \
 make makefiles && \
+cd $OLDPWD && \
 
 echo "[+] Setting functions" && \
 CORES=$(nproc) || \
