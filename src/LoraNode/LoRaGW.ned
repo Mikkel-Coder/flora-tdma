@@ -22,7 +22,7 @@ import inet.networklayer.contract.INetworkLayer;
 import inet.linklayer.loopback.LoopbackInterface;
 import flora.LoRa.LoRaGWNic;
 import flora.LoRaApp.SimpleLoRaApp;
-import flora.LoRa.PacketForwarder;
+import flora.PacketForwarder.PacketForwarder;
 import inet.linklayer.contract.IEthernetInterface;
 import inet.applications.contract.IApp;
 import inet.transportlayer.contract.IUdp;

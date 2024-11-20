@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora.LoRa;
+package flora.NetworkServer;
 import inet.applications.contract.IApp;
 
 simple NetworkServerApp like IApp

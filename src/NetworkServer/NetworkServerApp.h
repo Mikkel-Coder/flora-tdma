@@ -23,8 +23,8 @@
 #include <algorithm>
 #include "inet/common/INETDefs.h"
 
-#include "LoRaMacControlInfo_m.h"
-#include "LoRaMacFrame_m.h"
+#include "../LoRa/LoRaMacControlInfo_m.h"
+#include "../LoRa/LoRaMacFrame_m.h"
 #include "inet/applications/base/ApplicationBase.h"
 #include "inet/transportlayer/contract/udp/UdpSocket.h"
 #include "../LoRaApp/LoRaAppPacket_m.h"
