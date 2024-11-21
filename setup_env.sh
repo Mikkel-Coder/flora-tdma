@@ -27,4 +27,8 @@ function rebuild_flora() {
 	make MODE=debug -j${CORES}
 }
 
-echo "[+] The functions are 'rebuild_inet' and 'rebuild_flora'"
+function open_code() {
+	code ../../
+}
+
+echo "[+] The functions are 'rebuild_inet', 'rebuild_flora' and 'open_code'"
