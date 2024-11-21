@@ -37,32 +37,16 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
     int headerLength = -1;
     int ackLength = -1;
     simtime_t ackTimeout = -1;
-    simtime_t slotTime = -1; // not used
-    simtime_t sifsTime = -1; // not used
-    simtime_t difsTime = -1; // not used
     simtime_t waitDelay1Time = -1; // used for LoRaWAN
     simtime_t listening1Time = -1; // used for LoRaWAN
     simtime_t waitDelay2Time = -1; // used for LoRaWAN
     simtime_t listening2Time = -1; // used for LoRaWAN
-    int maxQueueSize = -1; // not used. has been commented out in the cc file
     int retryLimit = -1; // implemented but not used for anything
-    int cwMin = -1; // Not used
-    int cwMax = -1; // Not used
-    int cwMulticast = -1; // Not used
     int sequenceNumber = 0; // not used
     //@}
 
     /** End of the Short Inter-Frame Time period */
     cMessage *endSifs = nullptr;
-
-    /** End of the Data Inter-Frame Time period */
-    cMessage *endDifs = nullptr; // Not used
-
-    /** End of the backoff period */
-    cMessage *endBackoff = nullptr; // Not used
-
-    /** End of the ack timeout */
-    cMessage *endAckTimeout = nullptr; // Not used
 
     /**
      * @name CsmaCaMac state variables
@@ -88,9 +72,6 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
 
     /** Remaining backoff period in seconds */
     simtime_t backoffPeriod = -1; // Not used but also defined in cc file
-
-    /** Number of frame retransmission attempts. */
-    int retryCounter = -1; // Not used but implemented
 
     /** Messages received from upper layer and to be transmitted later */
     cPacketQueue transmissionQueue; // Probable not used idk
@@ -128,14 +109,8 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
 
     /** @name Statistics */
     //@{
-    long numRetry; // Not used
-    long numSentWithoutRetry; // not used
-    long numGivenUp; // not used
-    long numCollision; // not used
     long numSent;
     long numReceived;
-    long numSentBroadcast; // not used
-    long numReceivedBroadcast; // not used
     //@}
 
   public:
@@ -200,8 +175,6 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
     virtual Packet *getCurrentTransmission();
 
     virtual bool isReceiving();
-    virtual bool isAck(const Ptr<const LoRaMacFrame> &frame); // not used?
-    virtual bool isBroadcast(const Ptr<const LoRaMacFrame> & msg); // not used
     virtual bool isForUs(const Ptr<const LoRaMacFrame> &msg);
 
     void turnOnReceiver(void);

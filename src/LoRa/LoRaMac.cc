@@ -55,7 +55,6 @@ void LoRaMac::initialize(int stage)
         EV << "Initializing stage 0\n";
 
         /* Parameters are set by there values from the ini file */
-        //maxQueueSize = par("maxQueueSize");
         headerLength = par("headerLength"); /* Should be removed in the future */
         ackLength = par("ackLength"); /* Remove when TDMA is working*/
         ackTimeout = par("ackTimeout"); /* Remove when TDMA is working*/
@@ -99,34 +98,18 @@ void LoRaMac::initialize(int stage)
 
         // state variables
         fsm.setName("LoRaMac State Machine");
-        backoffPeriod = -1; // not used
-        retryCounter = 0; // Not used
 
         // sequence number for messages
         sequenceNumber = 0;
 
         // statistics
-        numRetry = 0; // not used
-        numSentWithoutRetry = 0; // not used
-        numGivenUp = 0; // not used
-        numCollision = 0; // not used
         numSent = 0;
         numReceived = 0;
-        numSentBroadcast = 0; // not used
-        numReceivedBroadcast = 0; // not used
 
         // initialize watches
         WATCH(fsm);
-        WATCH(backoffPeriod); // not used
-        WATCH(retryCounter); // not used
-        WATCH(numRetry); // not used
-        WATCH(numSentWithoutRetry); // not used
-        WATCH(numGivenUp); // not used
-        WATCH(numCollision); // not used
         WATCH(numSent);
         WATCH(numReceived);
-        WATCH(numSentBroadcast); // not used
-        WATCH(numReceivedBroadcast); // not used
     }
     // TODO: Use the function isInitializeStage()
     else if (stage == INITSTAGE_LINK_LAYER)
@@ -135,14 +118,8 @@ void LoRaMac::initialize(int stage)
 
 void LoRaMac::finish()
 {
-    recordScalar("numRetry", numRetry); // Not used
-    recordScalar("numSentWithoutRetry", numSentWithoutRetry); // not used
-    recordScalar("numGivenUp", numGivenUp); // not used
-    //recordScalar("numCollision", numCollision); // not used
     recordScalar("numSent", numSent);
     recordScalar("numReceived", numReceived);
-    recordScalar("numSentBroadcast", numSentBroadcast); // not used
-    recordScalar("numReceivedBroadcast", numReceivedBroadcast); // not used
 }
 
 /*
@@ -527,22 +504,6 @@ bool LoRaMac::isReceiving()
     return radio->getReceptionState() == IRadio::RECEPTION_STATE_RECEIVING;
 }
 
-/*
- * Who is using this? Delete if possible 
- */
-bool LoRaMac::isAck(const Ptr<const LoRaMacFrame> &frame)
-{
-    /* Not needed for TDMA */
-    return false;
-}
-
-/*
- * Who is using this? Delete if possible
- */
-bool LoRaMac::isBroadcast(const Ptr<const LoRaMacFrame> &frame)
-{
-    return frame->getReceiverAddress().isBroadcast();
-}
 
 bool LoRaMac::isForUs(const Ptr<const LoRaMacFrame> &frame)
 {
