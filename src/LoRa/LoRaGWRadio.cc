@@ -93,7 +93,7 @@ void LoRaGWRadio::handleUpperPacket(Packet *packet)
     EV << packet->getDetailStringRepresentation(evFlags) << endl;
 
     /* Convert the upper layer packet to a frame and set the right parameters */
-    const auto &frame = packet->peekAtFront<LoRaMacFrame>();
+    const auto &frame = packet->peekAtFront<LoRaTDMAMacFrame>();
     auto preamble = makeShared<LoRaPhyPreamble>();
 
     preamble->setBandwidth(frame->getLoRaBW());

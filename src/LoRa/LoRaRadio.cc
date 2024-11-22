@@ -22,7 +22,7 @@
 #include "inet/physicallayer/wireless/common/medium/RadioMedium.h"
 #include "LoRaPhy/LoRaTransmitter.h"
 #include "LoRaPhy/LoRaReceiver.h"
-#include "LoRaMacFrame_m.h"
+#include "LoRaTDMAMacFrame_m.h"
 #include "LoRaTagInfo_m.h"
 #include "../LoRaPhy/LoRaPhyPreamble_m.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
@@ -109,7 +109,7 @@ void LoRaRadio::handleUpperPacket(Packet *packet)
         preamble->setPower(tag->getPower());
         preamble->setSpreadFactor(tag->getSpreadFactor());
         preamble->setUseHeader(tag->getUseHeader());
-        const auto & loraHeader =  packet->peekAtFront<LoRaMacFrame>();
+        const auto & loraHeader =  packet->peekAtFront<LoRaTDMAMacFrame>();
         preamble->setReceiverAddress(loraHeader->getReceiverAddress());
 
         auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();

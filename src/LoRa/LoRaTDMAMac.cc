@@ -154,7 +154,7 @@ void LoRaTDMAMac::handleUpperPacket(Packet *packet)
 
     EV << "frame " << packet << " received from higher layer " << endl;
     auto pktEncap = encapsulate(packet);
-    const auto &frame = pktEncap->peekAtFront<LoRaMacFrame>();
+    const auto &frame = pktEncap->peekAtFront<LoRaTDMAMacFrame>();
     if (frame == nullptr)
         throw cRuntimeError("Header LoRaMacFrame not found");
 
@@ -212,12 +212,12 @@ void LoRaTDMAMac::handlePullPacketProcessed(Packet *packet, cGate *gate, bool su
  */
 void LoRaTDMAMac::handleWithFsm(cMessage *msg)
 {
-    Ptr<LoRaMacFrame>frame = nullptr;
+    Ptr<LoRaTDMAMacFrame>frame = nullptr;
 
     auto pkt = dynamic_cast<Packet *>(msg);
     if (pkt) {
         const auto &chunk = pkt->peekAtFront<Chunk>();
-        frame = dynamicPtrCast<LoRaMacFrame>(constPtrCast<Chunk>(chunk));
+        frame = dynamicPtrCast<LoRaTDMAMacFrame>(constPtrCast<Chunk>(chunk));
     }
     FSMA_Switch(fsm)
     {
@@ -401,7 +401,7 @@ void LoRaTDMAMac::receiveSignal(cComponent *source, simsignal_t signalID, intval
 
 Packet *LoRaTDMAMac::encapsulate(Packet *msg)
 {
-    auto frame = makeShared<LoRaMacFrame>();
+    auto frame = makeShared<LoRaTDMAMacFrame>();
     frame->setChunkLength(B(headerLength));
     msg->setArrival(msg->getArrivalModuleId(), msg->getArrivalGateId());
     auto tag = msg->getTag<LoRaTag>();
@@ -428,7 +428,7 @@ Packet *LoRaTDMAMac::encapsulate(Packet *msg)
 
 Packet *LoRaTDMAMac::decapsulate(Packet *frame)
 {
-    auto loraHeader = frame->popAtFront<LoRaMacFrame>();
+    auto loraHeader = frame->popAtFront<LoRaTDMAMacFrame>();
     frame->addTagIfAbsent<MacAddressInd>()->setSrcAddress(loraHeader->getTransmitterAddress());
     frame->addTagIfAbsent<MacAddressInd>()->setDestAddress(loraHeader->getReceiverAddress());
     frame->addTagIfAbsent<InterfaceInd>()->setInterfaceId(networkInterface->getInterfaceId());
@@ -445,7 +445,7 @@ void LoRaTDMAMac::sendDataFrame(Packet *frameToSend)
 
     auto frameCopy = frameToSend->dup();
 
-    auto macHeader = frameCopy->peekAtFront<LoRaMacFrame>();
+    auto macHeader = frameCopy->peekAtFront<LoRaTDMAMacFrame>();
 
     auto macAddressInd = frameCopy->addTagIfAbsent<MacAddressInd>();
     macAddressInd->setSrcAddress(macHeader->getTransmitterAddress());
@@ -479,7 +479,7 @@ bool LoRaTDMAMac::isReceiving()
 }
 
 
-bool LoRaTDMAMac::isForUs(const Ptr<const LoRaMacFrame> &frame)
+bool LoRaTDMAMac::isForUs(const Ptr<const LoRaTDMAMacFrame> &frame)
 {
     return frame->getReceiverAddress() == address;
 }

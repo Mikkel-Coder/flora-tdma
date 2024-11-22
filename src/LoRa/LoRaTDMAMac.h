@@ -6,7 +6,6 @@
 #include "inet/linklayer/base/MacProtocolBase.h"
 #include "inet/common/FSMA.h"
 #include "inet/queueing/contract/IPacketQueue.h"
-#include "LoRaTDMAMacControlInfo_m.h"
 #include "LoRaTDMAMacFrame_m.h"
 #include "inet/common/Protocol.h"
 #include "inet/queueing/contract/IActivePacketSink.h"
@@ -153,7 +152,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     virtual Packet *getCurrentTransmission();
 
     virtual bool isReceiving();
-    virtual bool isForUs(const Ptr<const LoRaMacFrame> &msg);
+    virtual bool isForUs(const Ptr<const LoRaTDMAMacFrame> &msg);
 
     void turnOnReceiver(void);
     void turnOffReceiver(void);

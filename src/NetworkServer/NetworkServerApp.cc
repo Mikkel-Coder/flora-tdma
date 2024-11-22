@@ -65,7 +65,7 @@ void NetworkServerApp::handleMessage(cMessage *msg)
 {
     if (msg->arrivedOn("socketIn")) {
         auto pkt = check_and_cast<Packet *>(msg);
-        const auto &frame  = pkt->peekAtFront<LoRaMacFrame>();
+        const auto &frame  = pkt->peekAtFront<LoRaTDMAMacFrame>();
         if (frame == nullptr)
             throw cRuntimeError("Header error type");
         if (simTime() >= getSimulation()->getWarmupPeriod())
@@ -82,7 +82,7 @@ void NetworkServerApp::handleMessage(cMessage *msg)
 
 void NetworkServerApp::processLoraMACPacket(Packet *pk)
 {
-    const auto & frame = pk->peekAtFront<LoRaMacFrame>();
+    const auto & frame = pk->peekAtFront<LoRaTDMAMacFrame>();
     if(isPacketProcessed(frame))
     {
         delete pk;
@@ -162,7 +162,7 @@ void NetworkServerApp::finish()
         recordScalar("DER SF12", 0);
 }
 
-bool NetworkServerApp::isPacketProcessed(const Ptr<const LoRaMacFrame> &pkt)
+bool NetworkServerApp::isPacketProcessed(const Ptr<const LoRaTDMAMacFrame> &pkt)
 {
     for(const auto & elem : knownNodes) {
         if(elem.srcAddr == pkt->getTransmitterAddress()) {
@@ -174,7 +174,7 @@ bool NetworkServerApp::isPacketProcessed(const Ptr<const LoRaMacFrame> &pkt)
 
 void NetworkServerApp::updateKnownNodes(Packet* pkt)
 {
-    const auto & frame = pkt->peekAtFront<LoRaMacFrame>();
+    const auto & frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
     bool nodeExist = false;
     for(auto &elem : knownNodes)
     {
@@ -210,11 +210,11 @@ void NetworkServerApp::updateKnownNodes(Packet* pkt)
 
 void NetworkServerApp::addPktToProcessingTable(Packet* pkt)
 {
-    const auto & frame = pkt->peekAtFront<LoRaMacFrame>();
+    const auto & frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
     bool packetExists = false;
     for(auto &elem : receivedPackets)
     {
-        const auto &frameAux = elem.rcvdPacket->peekAtFront<LoRaMacFrame>();
+        const auto &frameAux = elem.rcvdPacket->peekAtFront<LoRaTDMAMacFrame>();
         if(frameAux->getTransmitterAddress() == frame->getTransmitterAddress() && frameAux->getSequenceNumber() == frame->getSequenceNumber())
         {
             packetExists = true;
@@ -243,7 +243,7 @@ void NetworkServerApp::addPktToProcessingTable(Packet* pkt)
 void NetworkServerApp::processScheduledPacket(cMessage* selfMsg)
 {
     auto pkt = check_and_cast<Packet *>(selfMsg->removeControlInfo());
-    const auto & frame = pkt->peekAtFront<LoRaMacFrame>();
+    const auto & frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
 
     if (simTime() >= getSimulation()->getWarmupPeriod())
     {
@@ -256,7 +256,7 @@ void NetworkServerApp::processScheduledPacket(cMessage* selfMsg)
     int nodeNumber;
     for(uint i=0;i<receivedPackets.size();i++)
     {
-        const auto &frameAux = receivedPackets[i].rcvdPacket->peekAtFront<LoRaMacFrame>();
+        const auto &frameAux = receivedPackets[i].rcvdPacket->peekAtFront<LoRaTDMAMacFrame>();
         if(frameAux->getTransmitterAddress() == frame->getTransmitterAddress() && frameAux->getSequenceNumber() == frame->getSequenceNumber())        {
             packetNumber = i;
             nodeNumber = frame->getTransmitterAddress().getInt();
@@ -301,7 +301,7 @@ void NetworkServerApp::evaluateADR(Packet* pkt, L3Address pickedGateway, double 
     int nodeIndex;
 
     pkt->trimFront();
-    auto frame = pkt->removeAtFront<LoRaMacFrame>();
+    auto frame = pkt->removeAtFront<LoRaTDMAMacFrame>();
 
     const auto & rcvAppPacket = pkt->peekAtFront<LoRaAppPacket>();
 
@@ -405,10 +405,10 @@ void NetworkServerApp::evaluateADR(Packet* pkt, L3Address pickedGateway, double 
             knownNodes[nodeIndex].numberOfSentADRPackets++;
         }
 
-        auto frameToSend = makeShared<LoRaMacFrame>();
+        auto frameToSend = makeShared<LoRaTDMAMacFrame>();
         frameToSend->setChunkLength(B(par("headerLength").intValue()));
 
-      //  LoRaMacFrame *frameToSend = new LoRaMacFrame("ADRPacket");
+      //  LoRaTDMAMacFrame *frameToSend = new LoRaTDMAMacFrame("ADRPacket");
 
         frameToSend->setReceiverAddress(frame->getTransmitterAddress());
         frameToSend->setLoRaTP(math::dBmW2mW(14));

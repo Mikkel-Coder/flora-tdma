@@ -13,8 +13,8 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef LORA_LORAGWMAC_H_
-#define LORA_LORAGWMAC_H_
+#ifndef LORA_LORATDMAGWMAC_H_
+#define LORA_LORATDMAGWMAC_H_
 
 #include "inet/common/INETDefs.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
@@ -24,7 +24,7 @@
 #include "inet/linklayer/common/MacAddressTag_m.h"
 #include "inet/common/ModuleAccess.h"
 
-#include "LoRaMacFrame_m.h"
+#include "LoRaTDMAMacFrame_m.h"
 
 #if INET_VERSION < 0x0403 || ( INET_VERSION == 0x0403 && INET_PATCH_LEVEL == 0x00 )
 #  error At least INET 4.3.1 is required. Please update your INET dependency and fully rebuild the project.
@@ -34,7 +34,7 @@ namespace flora_tdma {
 using namespace inet;
 using namespace inet::physicallayer;
 
-class LoRaGWMac: public MacProtocolBase {
+class LoRaTDMAGWMac: public MacProtocolBase {
 public:
     bool waitingForDC;
     cMessage *dutyCycleTimer;
@@ -63,4 +63,4 @@ protected:
 
 }
 
-#endif /* LORA_LORAGWMAC_H_ */
+#endif /* LORA_LORATDMAGWMAC_H_ */

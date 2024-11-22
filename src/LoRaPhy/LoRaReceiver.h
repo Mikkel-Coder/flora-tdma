@@ -30,8 +30,8 @@
 #include "LoRaBandListening.h"
 #include "LoRa/LoRaRadio.h"
 #include "LoRaApp/SimpleLoRaApp.h"
-#include "LoRa/LoRaMac.h"
-#include "LoRa/LoRaGWMac.h"
+#include "LoRa/LoRaTDMAMac.h"
+#include "LoRa/LoRaTDMAGWMac.h"
 
 #include "LoRaRadioControlInfo_m.h"
 
