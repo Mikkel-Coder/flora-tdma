@@ -19,7 +19,6 @@
 #include "inet/linklayer/common/Ieee802Ctrl.h"
 #include "inet/linklayer/common/UserPriority.h"
 #include "inet/linklayer/common/MacAddressTag_m.h"
-#include "inet/linklayer/csmaca/CsmaCaMac.h"
 #include "LoRaMac.h"
 #include "LoRaTagInfo_m.h"
 #include "inet/common/ProtocolTag_m.h"
@@ -55,11 +54,7 @@ void LoRaMac::initialize(int stage)
         EV << "Initializing stage 0\n";
 
         /* Parameters are set by there values from the ini file */
-        //maxQueueSize = par("maxQueueSize");
         headerLength = par("headerLength"); /* Should be removed in the future */
-        ackLength = par("ackLength"); /* Remove when TDMA is working*/
-        ackTimeout = par("ackTimeout"); /* Remove when TDMA is working*/
-        retryLimit = par("retryLimit"); /* Remove when TDMA is working*/
 
         waitDelay1Time = 1;
         listening1Time = 1;
@@ -99,34 +94,18 @@ void LoRaMac::initialize(int stage)
 
         // state variables
         fsm.setName("LoRaMac State Machine");
-        backoffPeriod = -1; // not used
-        retryCounter = 0; // Not used
 
         // sequence number for messages
         sequenceNumber = 0;
 
         // statistics
-        numRetry = 0; // not used
-        numSentWithoutRetry = 0; // not used
-        numGivenUp = 0; // not used
-        numCollision = 0; // not used
         numSent = 0;
         numReceived = 0;
-        numSentBroadcast = 0; // not used
-        numReceivedBroadcast = 0; // not used
 
         // initialize watches
         WATCH(fsm);
-        WATCH(backoffPeriod); // not used
-        WATCH(retryCounter); // not used
-        WATCH(numRetry); // not used
-        WATCH(numSentWithoutRetry); // not used
-        WATCH(numGivenUp); // not used
-        WATCH(numCollision); // not used
         WATCH(numSent);
         WATCH(numReceived);
-        WATCH(numSentBroadcast); // not used
-        WATCH(numReceivedBroadcast); // not used
     }
     // TODO: Use the function isInitializeStage()
     else if (stage == INITSTAGE_LINK_LAYER)
@@ -135,14 +114,8 @@ void LoRaMac::initialize(int stage)
 
 void LoRaMac::finish()
 {
-    recordScalar("numRetry", numRetry); // Not used
-    recordScalar("numSentWithoutRetry", numSentWithoutRetry); // not used
-    recordScalar("numGivenUp", numGivenUp); // not used
-    //recordScalar("numCollision", numCollision); // not used
     recordScalar("numSent", numSent);
     recordScalar("numReceived", numReceived);
-    recordScalar("numSentBroadcast", numSentBroadcast); // not used
-    recordScalar("numReceivedBroadcast", numReceivedBroadcast); // not used
 }
 
 /*
@@ -205,6 +178,7 @@ void LoRaMac::processUpperPacket()
 
 /*
  * Who uses this? Delete if possible
+ * Required by IPassivePacketSink
  */
 queueing::IPassivePacketSource *LoRaMac::getProvider(cGate *gate)
 {
@@ -213,6 +187,7 @@ queueing::IPassivePacketSource *LoRaMac::getProvider(cGate *gate)
 
 /*
  * Check if this can be deleted/removed
+ * Required to be implemented by IActivePacketSink
  */
 void LoRaMac::handleCanPullPacketChanged(cGate *gate)
 {
@@ -224,6 +199,7 @@ void LoRaMac::handleCanPullPacketChanged(cGate *gate)
 
 /*
  * Check if this can be deleted/removed
+ * Required to be implemented by IActivePacketSink
  */
 void LoRaMac::handlePullPacketProcessed(Packet *packet, cGate *gate, bool successful)
 {
@@ -481,27 +457,27 @@ void LoRaMac::sendDataFrame(Packet *frameToSend)
 /*
  * Who is using this? Delete if possible.
  */
-void LoRaMac::sendAckFrame()
-{
-    /* This should not be need for TDMA */
-    auto frameToAck = static_cast<Packet *>(endSifs->getContextPointer());
-    endSifs->setContextPointer(nullptr);
-    auto macHeader = makeShared<CsmaCaMacAckHeader>();
-    macHeader->setReceiverAddress(MacAddress(frameToAck->peekAtFront<LoRaMacFrame>()->getTransmitterAddress().getInt()));
+// void LoRaMac::sendAckFrame()
+// {
+//     /* This should not be need for TDMA */
+//     auto frameToAck = static_cast<Packet *>(endSifs->getContextPointer());
+//     endSifs->setContextPointer(nullptr);
+//     auto macHeader = makeShared<CsmaCaMacAckHeader>();
+//     macHeader->setReceiverAddress(MacAddress(frameToAck->peekAtFront<LoRaMacFrame>()->getTransmitterAddress().getInt()));
 
-    EV << "sending Ack frame\n";
+//     EV << "sending Ack frame\n";
 
-    macHeader->setChunkLength(B(ackLength));
-    auto frame = new Packet("CsmaAck");
-    frame->insertAtFront(macHeader);
-    radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
+//     macHeader->setChunkLength(B(ackLength));
+//     auto frame = new Packet("CsmaAck");
+//     frame->insertAtFront(macHeader);
+//     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
 
-    auto macAddressInd = frame->addTagIfAbsent<MacAddressInd>();
-    macAddressInd->setSrcAddress(macHeader->getTransmitterAddress());
-    macAddressInd->setDestAddress(macHeader->getReceiverAddress());
+//     auto macAddressInd = frame->addTagIfAbsent<MacAddressInd>();
+//     macAddressInd->setSrcAddress(macHeader->getTransmitterAddress());
+//     macAddressInd->setDestAddress(macHeader->getReceiverAddress());
 
-    sendDown(frame);
-}
+//     sendDown(frame);
+// }
 
 /*
  * This is used to schedule LoRaWAN like receiving window 1 and 2 
@@ -527,22 +503,6 @@ bool LoRaMac::isReceiving()
     return radio->getReceptionState() == IRadio::RECEPTION_STATE_RECEIVING;
 }
 
-/*
- * Who is using this? Delete if possible 
- */
-bool LoRaMac::isAck(const Ptr<const LoRaMacFrame> &frame)
-{
-    /* Not needed for TDMA */
-    return false;
-}
-
-/*
- * Who is using this? Delete if possible
- */
-bool LoRaMac::isBroadcast(const Ptr<const LoRaMacFrame> &frame)
-{
-    return frame->getReceiverAddress().isBroadcast();
-}
 
 bool LoRaMac::isForUs(const Ptr<const LoRaMacFrame> &frame)
 {
