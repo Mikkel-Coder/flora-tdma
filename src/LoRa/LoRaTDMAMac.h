@@ -33,10 +33,6 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     MacAddress address;
     double bitrate = NaN;
     int headerLength = -1;
-    simtime_t waitDelay1Time = -1; // used for LoRaWAN
-    simtime_t listening1Time = -1; // used for LoRaWAN
-    simtime_t waitDelay2Time = -1; // used for LoRaWAN
-    simtime_t listening2Time = -1; // used for LoRaWAN
     int sequenceNumber = 0;
     //@}
 
@@ -47,50 +43,73 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
      * @name CsmaCaMac state variables
      * Various state information checked and modified according to the state machine.
      */
-    //@{
-    enum State {
-        IDLE,
-        TRANSMIT,
-        WAIT_DELAY_1, /* From this: This is used to alike LoRaWAN wait for receive window 1 */
-        LISTENING_1,
-        RECEIVING_1,
-        WAIT_DELAY_2, 
-        LISTENING_2,
-        RECEIVING_2, /* To this line is form LoRaWAN like */
+    //@{ // TODO: Old impl, delete me later
+    // enum State {
+    //     IDLE,
+    //     TRANSMIT,
+    //     WAIT_DELAY_1, /* From this: This is used to alike LoRaWAN wait for receive window 1 */
+    //     LISTENING_1,
+    //     RECEIVING_1,
+    //     WAIT_DELAY_2, 
+    //     LISTENING_2,
+    //     RECEIVING_2, /* To this line is form LoRaWAN like */
+    // };
+
+    /** @name MAC States */
+    enum States {
+      INIT,
+      SLEEP,
+      TRANSMIT,
+      LISTEN,
+      RECEIVE,
     };
 
     IRadio *radio = nullptr;
     IRadio::TransmissionState transmissionState = IRadio::TRANSMISSION_STATE_UNDEFINED;
     IRadio::ReceptionState receptionState = IRadio::RECEPTION_STATE_UNDEFINED;
 
-    cFSM fsm;
+    /** @name the mac state */
+    States macState;
+
+    /** @name Timer messages */
+    cMessage *startRXSlot = nullptr;
+    cMessage *endRXSlot = nullptr;
+    cMessage *startTXSlot = nullptr;
+    cMessage *endTXSlot = nullptr;
+
+    /** @name State transition messages */
+    cMessage *endTransmission = nullptr;
+    cMessage *endReception = nullptr;
+
+    /** @name Internal clock */
+    simtime_t internalclock;
 
     /** @name Timer messages */
     //@{
     /** Timeout after the transmission of a Data frame */
-    cMessage *endTransmission = nullptr;
+    // cMessage *endTransmission = nullptr;
 
-    /** Timeout after the reception of a Data frame */
-    cMessage *endReception = nullptr;
+    // /** Timeout after the reception of a Data frame */
+    // cMessage *endReception = nullptr;
 
-    /** Timeout after the reception of a Data frame */
-    cMessage *droppedPacket = nullptr;
+    // /** Timeout after the reception of a Data frame */
+    // cMessage *droppedPacket = nullptr;
 
-    /** End of the Delay_1 */
-    cMessage *endDelay_1 = nullptr;
+    // /** End of the Delay_1 */
+    // cMessage *endDelay_1 = nullptr;
 
-    /** End of the Listening_1 */
-    cMessage *endListening_1 = nullptr;
+    // /** End of the Listening_1 */
+    // cMessage *endListening_1 = nullptr;
 
-    /** End of the Delay_2 */
-    cMessage *endDelay_2 = nullptr;
+    // /** End of the Delay_2 */
+    // cMessage *endDelay_2 = nullptr;
 
-    /** End of the Listening_2 */
-    cMessage *endListening_2 = nullptr;
+    // /** End of the Listening_2 */
+    // cMessage *endListening_2 = nullptr;
 
-    /** Radio state change self message. Currently this is optimized away and sent directly */
-    cMessage *mediumStateChange = nullptr;
-    //@}
+    // /** Radio state change self message. Currently this is optimized away and sent directly */
+    // cMessage *mediumStateChange = nullptr;
+    // //@}
 
     /** @name Statistics */
     //@{
@@ -129,7 +148,8 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     virtual void handleSelfMessage(cMessage *msg) override;
     virtual void handleUpperPacket(Packet *packet) override;
     virtual void handleLowerPacket(Packet *packet) override;
-    virtual void handleWithFsm(cMessage *msg);
+    // virtual void handleWithFsm(cMessage *msg);
+    virtual void handleState(cMessage *msg);
 
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details) override;
 
@@ -148,7 +168,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
      * @name Utility functions
      */
     //@{
-    virtual void finishCurrentTransmission();
+    // virtual void finishCurrentTransmission();
     virtual Packet *getCurrentTransmission();
 
     virtual bool isReceiving();

@@ -32,14 +32,14 @@ Define_Module(LoRaTDMAMac);
 LoRaTDMAMac::~LoRaTDMAMac()
 {
     /* self cMessages */
-    cancelAndDelete(endTransmission);
-    cancelAndDelete(endReception);
-    cancelAndDelete(droppedPacket);
-    cancelAndDelete(endDelay_1);
-    cancelAndDelete(endListening_1);
-    cancelAndDelete(endDelay_2);
-    cancelAndDelete(endListening_2);
-    cancelAndDelete(mediumStateChange);
+    // cancelAndDelete(endTransmission);
+    // cancelAndDelete(endReception);
+    // cancelAndDelete(droppedPacket);
+    // cancelAndDelete(endDelay_1);
+    // cancelAndDelete(endListening_1);
+    // cancelAndDelete(endDelay_2);
+    // cancelAndDelete(endListening_2);
+    // cancelAndDelete(mediumStateChange);
 
     /* What about the Queue? Perhaps clearQueue() */
 }
@@ -55,11 +55,6 @@ void LoRaTDMAMac::initialize(int stage)
 
         /* Parameters are set by there values from the ini file */
         headerLength = par("headerLength"); /* Should be removed in the future */
-
-        waitDelay1Time = 1;
-        listening1Time = 1;
-        waitDelay2Time = 1;
-        listening2Time = 1;
 
         const char *addressString = par("address");
         if (!strcmp(addressString, "auto")) {
@@ -80,20 +75,21 @@ void LoRaTDMAMac::initialize(int stage)
         radio = check_and_cast<IRadio *>(radioModule);
 
         // initialize self messages
-        endTransmission = new cMessage("Transmission");
-        endReception = new cMessage("Reception");
-        droppedPacket = new cMessage("Dropped Packet");
-        endDelay_1 = new cMessage("Delay_1");
-        endListening_1 = new cMessage("Listening_1");
-        endDelay_2 = new cMessage("Delay_2");
-        endListening_2 = new cMessage("Listening_2");
-        mediumStateChange = new cMessage("MediumStateChange");
+        // endTransmission = new cMessage("Transmission");
+        // endReception = new cMessage("Reception");
+        // droppedPacket = new cMessage("Dropped Packet");
+        // endDelay_1 = new cMessage("Delay_1");
+        // endListening_1 = new cMessage("Listening_1");
+        // endDelay_2 = new cMessage("Delay_2");
+        // endListening_2 = new cMessage("Listening_2");
+        // mediumStateChange = new cMessage("MediumStateChange");
 
         // set up internal queue
         txQueue = getQueue(gate(upperLayerInGateId));
 
         // state variables
-        fsm.setName("LoRaTDMAMac State Machine");
+        // fsm.setName("LoRaTDMAMac State Machine");
+        macState = INIT;
 
         // sequence number for messages
         sequenceNumber = 0;
@@ -103,7 +99,7 @@ void LoRaTDMAMac::initialize(int stage)
         numReceived = 0;
 
         // initialize watches
-        WATCH(fsm);
+        // WATCH(fsm);
         WATCH(numSent);
         WATCH(numReceived);
     }
@@ -142,32 +138,32 @@ void LoRaTDMAMac::configureNetworkInterface()
 void LoRaTDMAMac::handleSelfMessage(cMessage *msg)
 {
     EV << "received self message: " << msg << endl;
-    handleWithFsm(msg);
+    // handleWithFsm(msg);
 }
 
 void LoRaTDMAMac::handleUpperPacket(Packet *packet)
 {
-    if(fsm.getState() != IDLE) {
-         error("Wrong, it should not happen erroneous state: %s", fsm.getStateName());
-    }
-    packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
+    // if(fsm.getState() != IDLE) {
+    //      error("Wrong, it should not happen erroneous state: %s", fsm.getStateName());
+    // }
+    // packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
 
-    EV << "frame " << packet << " received from higher layer " << endl;
-    auto pktEncap = encapsulate(packet);
-    const auto &frame = pktEncap->peekAtFront<LoRaTDMAMacFrame>();
-    if (frame == nullptr)
-        throw cRuntimeError("Header LoRaMacFrame not found");
+    // EV << "frame " << packet << " received from higher layer " << endl;
+    // auto pktEncap = encapsulate(packet);
+    // const auto &frame = pktEncap->peekAtFront<LoRaTDMAMacFrame>();
+    // if (frame == nullptr)
+    //     throw cRuntimeError("Header LoRaMacFrame not found");
 
-    if (currentTxFrame != nullptr)
-        throw cRuntimeError("Model error: incomplete transmission exists");
-    currentTxFrame = pktEncap;
-    handleWithFsm(currentTxFrame);
+    // if (currentTxFrame != nullptr)
+    //     throw cRuntimeError("Model error: incomplete transmission exists");
+    // currentTxFrame = pktEncap;
+    // handleWithFsm(currentTxFrame);
 }
 
 void LoRaTDMAMac::handleLowerPacket(Packet *msg)
 {
-    if( (fsm.getState() == RECEIVING_1) || (fsm.getState() == RECEIVING_2)) handleWithFsm(msg);
-    else delete msg;
+    // if( (fsm.getState() == RECEIVING_1) || (fsm.getState() == RECEIVING_2)) handleWithFsm(msg);
+    // else delete msg;
 }
 
 void LoRaTDMAMac::processUpperPacket()
@@ -192,9 +188,9 @@ queueing::IPassivePacketSource *LoRaTDMAMac::getProvider(cGate *gate)
 void LoRaTDMAMac::handleCanPullPacketChanged(cGate *gate)
 {
     Enter_Method("handleCanPullPacketChanged");
-    if (fsm.getState() == IDLE && !txQueue->isEmpty()) {
-        processUpperPacket();
-    }
+    // if (fsm.getState() == IDLE && !txQueue->isEmpty()) {
+    //     processUpperPacket();
+    // }
 }
 
 /*
@@ -208,149 +204,182 @@ void LoRaTDMAMac::handlePullPacketProcessed(Packet *packet, cGate *gate, bool su
 }
 
 /*
- * This is used to handle a LoRaWAN class A end device with its 
+ * This is used to handle a LoRaWAN class A end device with its
+ * TODO: Delete this old impl
  */
-void LoRaTDMAMac::handleWithFsm(cMessage *msg)
+// void LoRaTDMAMac::handleWithFsm(cMessage *msg)
+// {
+//     Ptr<LoRaTDMAMacFrame>frame = nullptr;
+//
+//     auto pkt = dynamic_cast<Packet *>(msg);
+//     if (pkt) {
+//         const auto &chunk = pkt->peekAtFront<Chunk>();
+//         frame = dynamicPtrCast<LoRaTDMAMacFrame>(constPtrCast<Chunk>(chunk));
+//     }
+//     FSMA_Switch(fsm)
+//     {
+//         FSMA_State(IDLE)
+//         {
+//             FSMA_Enter(turnOffReceiver());
+//             FSMA_Event_Transition(Idle-Transmit,
+//                                   isUpperMessage(msg),
+//                                   TRANSMIT,
+//             );
+//         }
+//         FSMA_State(TRANSMIT)
+//         {
+//             FSMA_Enter(sendDataFrame(getCurrentTransmission()));
+//             FSMA_Event_Transition(Transmit-Wait_Delay_1,
+//                                   msg == endTransmission,
+//                                   WAIT_DELAY_1,
+//                 finishCurrentTransmission();
+//                 numSent++;
+//             );
+//         }
+//         FSMA_State(WAIT_DELAY_1)
+//         {
+//             FSMA_Enter(turnOffReceiver());
+//             FSMA_Event_Transition(Wait_Delay_1-Listening_1,
+//                                   msg == endDelay_1 || endDelay_1->isScheduled() == false,
+//                                   LISTENING_1,
+//             );
+//         }
+//         /* LoRaWAN window 1*/
+//         FSMA_State(LISTENING_1)
+//         {
+//             FSMA_Enter(turnOnReceiver());
+//             FSMA_Event_Transition(Listening_1-Wait_Delay_2,
+//                                   msg == endListening_1 || endListening_1->isScheduled() == false,
+//                                   WAIT_DELAY_2,
+//             );
+//             FSMA_Event_Transition(Listening_1-Receiving1,
+//                                   msg == mediumStateChange && isReceiving(),
+//                                   RECEIVING_1,
+//             );
+//         }
+//         FSMA_State(RECEIVING_1)
+//         {
+//             /* Check if the frame not for us */
+//             FSMA_Event_Transition(Receive-Unicast-Not-For, /* This name does not make any sense */
+//                                   isLowerMessage(msg) && !isForUs(frame),
+//                                   LISTENING_1,
+//             );
+//             FSMA_Event_Transition(Receive-Unicast,
+//                                   isLowerMessage(msg) && isForUs(frame),
+//                                   IDLE,
+//                 sendUp(decapsulate(pkt));
+//                 numReceived++;
+//                 cancelEvent(endListening_1); // LoRaWAN window 2 has been canceled and the rest
+//                 cancelEvent(endDelay_2);
+//                 cancelEvent(endListening_2);
+//             );
+//             FSMA_Event_Transition(Receive-BelowSensitivity,
+//                                   msg == droppedPacket,
+//                                   LISTENING_1,
+//             );
+//
+//         }
+//         FSMA_State(WAIT_DELAY_2)
+//         {
+//             FSMA_Enter(turnOffReceiver());
+//             FSMA_Event_Transition(Wait_Delay_2-Listening_2,
+//                                   msg == endDelay_2 || endDelay_2->isScheduled() == false,
+//                                   LISTENING_2,
+//             );
+//         }
+//         /* LoRaWAN window 2*/
+//         FSMA_State(LISTENING_2)
+//         {
+//             FSMA_Enter(turnOnReceiver());
+//             FSMA_Event_Transition(Listening_2-idle,
+//                                   msg == endListening_2 || endListening_2->isScheduled() == false,
+//                                   IDLE,
+//             );
+//             FSMA_Event_Transition(Listening_2-Receiving2,
+//                                   msg == mediumStateChange && isReceiving(),
+//                                   RECEIVING_2,
+//             );
+//         }
+//         FSMA_State(RECEIVING_2)
+//         {
+//             FSMA_Event_Transition(Receive2-Unicast-Not-For,
+//                                   isLowerMessage(msg) && !isForUs(frame),
+//                                   LISTENING_2,
+//             );
+//             FSMA_Event_Transition(Receive2-Unicast,
+//                                   isLowerMessage(msg) && isForUs(frame),
+//                                   IDLE,
+//                 sendUp(pkt);
+//                 numReceived++;
+//                 cancelEvent(endListening_2);
+//             );
+//             FSMA_Event_Transition(Receive2-BelowSensitivity,
+//                                   msg == droppedPacket,
+//                                   LISTENING_2,
+//             );
+//         }
+//     }
+//
+//     /* If we are idle, check if we can continue by: */
+//     if (fsm.getState() == IDLE) {
+//
+//         /* if we are receiving, then change state in the FSM */
+//         if (isReceiving())
+//             handleWithFsm(mediumStateChange);
+//
+//         /* If we have something to process, then process it in the FSM */
+//         else if (currentTxFrame != nullptr)
+//             handleWithFsm(currentTxFrame);
+//
+//         /* If someone form the upper layer has given us something*/
+//         else if (!txQueue->isEmpty()) {
+//             /* Then process it (try it as a packet) */
+//             processUpperPacket();
+//         }
+//     }
+//
+//     /* God only knows what happens here */
+//     if (endSifs) {
+//         if (isLowerMessage(msg) && pkt->getOwner() == this && (endSifs->getContextPointer() != pkt))
+//             delete pkt;
+//     }
+//     else {
+//         if (isLowerMessage(msg) && pkt->getOwner() == this)
+//             delete pkt;
+//     }
+//     getDisplayString().setTagArg("t", 0, fsm.getStateName());
+// }
+
+void LoRaTDMAMac::handleState(cMessage *msg)
 {
-    Ptr<LoRaTDMAMacFrame>frame = nullptr;
-
-    auto pkt = dynamic_cast<Packet *>(msg);
-    if (pkt) {
-        const auto &chunk = pkt->peekAtFront<Chunk>();
-        frame = dynamicPtrCast<LoRaTDMAMacFrame>(constPtrCast<Chunk>(chunk));
-    }
-    FSMA_Switch(fsm)
+    switch (macState)
     {
-        FSMA_State(IDLE)
-        {
-            FSMA_Enter(turnOffReceiver());
-            FSMA_Event_Transition(Idle-Transmit,
-                                  isUpperMessage(msg),
-                                  TRANSMIT,
-            );
-        }
-        FSMA_State(TRANSMIT)
-        {
-            FSMA_Enter(sendDataFrame(getCurrentTransmission()));
-            FSMA_Event_Transition(Transmit-Wait_Delay_1,
-                                  msg == endTransmission,
-                                  WAIT_DELAY_1,
-                finishCurrentTransmission();
-                numSent++;
-            );
-        }
-        FSMA_State(WAIT_DELAY_1)
-        {
-            FSMA_Enter(turnOffReceiver());
-            FSMA_Event_Transition(Wait_Delay_1-Listening_1,
-                                  msg == endDelay_1 || endDelay_1->isScheduled() == false,
-                                  LISTENING_1,
-            );
-        }
-        /* LoRaWAN window 1*/
-        FSMA_State(LISTENING_1)
-        {
-            FSMA_Enter(turnOnReceiver());
-            FSMA_Event_Transition(Listening_1-Wait_Delay_2,
-                                  msg == endListening_1 || endListening_1->isScheduled() == false,
-                                  WAIT_DELAY_2,
-            );
-            FSMA_Event_Transition(Listening_1-Receiving1,
-                                  msg == mediumStateChange && isReceiving(),
-                                  RECEIVING_1,
-            );
-        }
-        FSMA_State(RECEIVING_1)
-        {
-            /* Check if the frame not for us */
-            FSMA_Event_Transition(Receive-Unicast-Not-For, /* This name does not make any sense */
-                                  isLowerMessage(msg) && !isForUs(frame),
-                                  LISTENING_1,
-            );
-            FSMA_Event_Transition(Receive-Unicast,
-                                  isLowerMessage(msg) && isForUs(frame),
-                                  IDLE,
-                sendUp(decapsulate(pkt));
-                numReceived++;
-                cancelEvent(endListening_1); // LoRaWAN window 2 has been canceled and the rest
-                cancelEvent(endDelay_2);
-                cancelEvent(endListening_2);
-            );
-            FSMA_Event_Transition(Receive-BelowSensitivity,
-                                  msg == droppedPacket,
-                                  LISTENING_1,
-            );
+    case INIT:
+        EV_DETAIL << "MAC Initialized, transition: INIT -> SLEEP" << endl;
+        // TODO: schedule initial events for timing of receive here or in Initialize function
+        macState = SLEEP;
+        break;
 
-        }
-        FSMA_State(WAIT_DELAY_2)
-        {
-            FSMA_Enter(turnOffReceiver());
-            FSMA_Event_Transition(Wait_Delay_2-Listening_2,
-                                  msg == endDelay_2 || endDelay_2->isScheduled() == false,
-                                  LISTENING_2,
-            );
-        }
-        /* LoRaWAN window 2*/
-        FSMA_State(LISTENING_2)
-        {
-            FSMA_Enter(turnOnReceiver());
-            FSMA_Event_Transition(Listening_2-idle,
-                                  msg == endListening_2 || endListening_2->isScheduled() == false,
-                                  IDLE,
-            );
-            FSMA_Event_Transition(Listening_2-Receiving2,
-                                  msg == mediumStateChange && isReceiving(),
-                                  RECEIVING_2,
-            );
-        }
-        FSMA_State(RECEIVING_2)
-        {
-            FSMA_Event_Transition(Receive2-Unicast-Not-For,
-                                  isLowerMessage(msg) && !isForUs(frame),
-                                  LISTENING_2,
-            );
-            FSMA_Event_Transition(Receive2-Unicast,
-                                  isLowerMessage(msg) && isForUs(frame),
-                                  IDLE,
-                sendUp(pkt);
-                numReceived++;
-                cancelEvent(endListening_2);
-            );
-            FSMA_Event_Transition(Receive2-BelowSensitivity,
-                                  msg == droppedPacket,
-                                  LISTENING_2,
-            );
-        }
+    case SLEEP:
+        /* code */
+        break;
+
+    case TRANSMIT:
+        /* code */
+        break;
+
+    case LISTEN:
+        /* code */
+        break;
+
+    case RECEIVE:
+        /* code */
+        break;
+    
+    default:
+        throw cRuntimeError("Unknown MAC State: %d", macState);
+        break;
     }
-
-    /* If we are idle, check if we can continue by: */
-    if (fsm.getState() == IDLE) {
-
-        /* if we are receiving, then change state in the FSM */
-        if (isReceiving())
-            handleWithFsm(mediumStateChange);
-
-        /* If we have something to process, then process it in the FSM */
-        else if (currentTxFrame != nullptr)
-            handleWithFsm(currentTxFrame);
-        
-        /* If someone form the upper layer has given us something*/
-        else if (!txQueue->isEmpty()) {
-            /* Then process it (try it as a packet) */
-            processUpperPacket();
-        }
-    }
-
-    /* God only knows what happens here */
-    if (endSifs) {
-        if (isLowerMessage(msg) && pkt->getOwner() == this && (endSifs->getContextPointer() != pkt))
-            delete pkt;
-    }
-    else {
-        if (isLowerMessage(msg) && pkt->getOwner() == this)
-            delete pkt;
-    }
-    getDisplayString().setTagArg("t", 0, fsm.getStateName());
 }
 
 /*
@@ -373,14 +402,14 @@ void LoRaTDMAMac::receiveSignal(cComponent *source, simsignal_t signalID, intval
 
         /* Now update our own FSM to the parsed state from Radio */
         receptionState = newRadioReceptionState;
-        handleWithFsm(mediumStateChange); // Our own cMessage
+        // handleWithFsm(mediumStateChange); // Our own cMessage
     }
 
     /* Check if we would drop the packet */
     else if (signalID == LoRaRadio::droppedPacket) {
         /* If so then sleep the Radio and drop using our own FSM */
         radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-        handleWithFsm(droppedPacket);
+        // handleWithFsm(droppedPacket);
     }
 
     /* Check if we are transmitting */
@@ -390,7 +419,7 @@ void LoRaTDMAMac::receiveSignal(cComponent *source, simsignal_t signalID, intval
         /* If our transmissionState is transmitting & our Radio state is idle */
         if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
             /* Then end our current transmission state */
-            handleWithFsm(endTransmission);
+            // handleWithFsm(endTransmission);
             /* And update the Radio to sleep mode */
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
         }
@@ -457,15 +486,15 @@ void LoRaTDMAMac::sendDataFrame(Packet *frameToSend)
 /*
  * This is used to schedule LoRaWAN like receiving window 1 and 2 
  */
-void LoRaTDMAMac::finishCurrentTransmission()
-{
-    scheduleAt(simTime() + waitDelay1Time, endDelay_1);
-    scheduleAt(simTime() + waitDelay1Time + listening1Time, endListening_1);
-    scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time, endDelay_2);
-    scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time + listening2Time, endListening_2);
-    /* Remember to delete the old frame, as the copy has been sent successfully */
-    deleteCurrentTxFrame();
-}
+// void LoRaTDMAMac::finishCurrentTransmission()
+// {
+//     scheduleAt(simTime() + waitDelay1Time, endDelay_1);
+//     scheduleAt(simTime() + waitDelay1Time + listening1Time, endListening_1);
+//     scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time, endDelay_2);
+//     scheduleAt(simTime() + waitDelay1Time + listening1Time + waitDelay2Time + listening2Time, endListening_2);
+//     /* Remember to delete the old frame, as the copy has been sent successfully */
+//     deleteCurrentTxFrame();
+// }
 
 Packet *LoRaTDMAMac::getCurrentTransmission()
 {
