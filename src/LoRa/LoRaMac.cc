@@ -455,31 +455,6 @@ void LoRaMac::sendDataFrame(Packet *frameToSend)
 }
 
 /*
- * Who is using this? Delete if possible.
- */
-// void LoRaMac::sendAckFrame()
-// {
-//     /* This should not be need for TDMA */
-//     auto frameToAck = static_cast<Packet *>(endSifs->getContextPointer());
-//     endSifs->setContextPointer(nullptr);
-//     auto macHeader = makeShared<CsmaCaMacAckHeader>();
-//     macHeader->setReceiverAddress(MacAddress(frameToAck->peekAtFront<LoRaMacFrame>()->getTransmitterAddress().getInt()));
-
-//     EV << "sending Ack frame\n";
-
-//     macHeader->setChunkLength(B(ackLength));
-//     auto frame = new Packet("CsmaAck");
-//     frame->insertAtFront(macHeader);
-//     radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
-
-//     auto macAddressInd = frame->addTagIfAbsent<MacAddressInd>();
-//     macAddressInd->setSrcAddress(macHeader->getTransmitterAddress());
-//     macAddressInd->setDestAddress(macHeader->getReceiverAddress());
-
-//     sendDown(frame);
-// }
-
-/*
  * This is used to schedule LoRaWAN like receiving window 1 and 2 
  */
 void LoRaMac::finishCurrentTransmission()
