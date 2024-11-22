@@ -66,19 +66,6 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
 
     cFSM fsm;
 
-    /** Remaining backoff period in seconds */
-    // simtime_t backoffPeriod = -1; // Not used but also defined in cc file
-
-    /** Number of frame retransmission attempts. */
-    // int retryCounter = -1; // Not used but implemented
-
-    /** Messages received from upper layer and to be transmitted later */
-    cPacketQueue transmissionQueue; // Probable not used idk
-
-    /** Passive queue module to request messages from */
-    cPacketQueue *queueModule = nullptr; // Probable not used idk
-    //@}
-
     /** @name Timer messages */
     //@{
     /** Timeout after the transmission of a Data frame */
@@ -119,9 +106,9 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
     //@{
     virtual ~LoRaMac();
     //@}
-    virtual MacAddress getAddress(); // not used?
+    virtual MacAddress getAddress();
     virtual queueing::IPassivePacketSource *getProvider(cGate *gate) override;
-    virtual void handleCanPullPacketChanged(cGate *gate) override; // not used?
+    virtual void handleCanPullPacketChanged(cGate *gate) override;
     virtual void handlePullPacketProcessed(Packet *packet, cGate *gate, bool successful) override;
 
   protected:
@@ -151,19 +138,11 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
     virtual Packet *decapsulate(Packet *frame);
     //@}
 
-    // OperationalBase:
-    /* THIS IS NOT IMPLEMENTED AND WILL PROBABLY NEVER BE */
-    virtual void handleStartOperation(LifecycleOperation *operation) override {}    //TODO implementation
-    virtual void handleStopOperation(LifecycleOperation *operation) override {}    //TODO implementation
-    virtual void handleCrashOperation(LifecycleOperation *operation) override {}    //TODO implementation
-
     /**
      * @name Frame transmission functions
      */
     //@{
     virtual void sendDataFrame(Packet *frameToSend);
-    // virtual void sendAckFrame(); // Not used
-    //virtual void sendJoinFrame(); // not used, also comment? what
     //@}
 
     /**
