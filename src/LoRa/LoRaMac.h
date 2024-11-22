@@ -32,17 +32,13 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
      */
     //@{
     MacAddress address;
-    bool useAck = true; // Not used. Remove
     double bitrate = NaN;
     int headerLength = -1;
-    int ackLength = -1;
-    simtime_t ackTimeout = -1;
     simtime_t waitDelay1Time = -1; // used for LoRaWAN
     simtime_t listening1Time = -1; // used for LoRaWAN
     simtime_t waitDelay2Time = -1; // used for LoRaWAN
     simtime_t listening2Time = -1; // used for LoRaWAN
-    int retryLimit = -1; // implemented but not used for anything
-    int sequenceNumber = 0; // not used
+    int sequenceNumber = 0;
     //@}
 
     /** End of the Short Inter-Frame Time period */
@@ -71,7 +67,10 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
     cFSM fsm;
 
     /** Remaining backoff period in seconds */
-    simtime_t backoffPeriod = -1; // Not used but also defined in cc file
+    // simtime_t backoffPeriod = -1; // Not used but also defined in cc file
+
+    /** Number of frame retransmission attempts. */
+    // int retryCounter = -1; // Not used but implemented
 
     /** Messages received from upper layer and to be transmitted later */
     cPacketQueue transmissionQueue; // Probable not used idk
@@ -121,9 +120,9 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
     virtual ~LoRaMac();
     //@}
     virtual MacAddress getAddress(); // not used?
-    virtual queueing::IPassivePacketSource *getProvider(cGate *gate) override; // not used?
+    virtual queueing::IPassivePacketSource *getProvider(cGate *gate) override;
     virtual void handleCanPullPacketChanged(cGate *gate) override; // not used?
-    virtual void handlePullPacketProcessed(Packet *packet, cGate *gate, bool successful) override; // not used?
+    virtual void handlePullPacketProcessed(Packet *packet, cGate *gate, bool successful) override;
 
   protected:
     /**
@@ -163,7 +162,7 @@ class LoRaMac : public MacProtocolBase, public IMacProtocol, public queueing::IA
      */
     //@{
     virtual void sendDataFrame(Packet *frameToSend);
-    virtual void sendAckFrame(); // Not used
+    // virtual void sendAckFrame(); // Not used
     //virtual void sendJoinFrame(); // not used, also comment? what
     //@}
 
