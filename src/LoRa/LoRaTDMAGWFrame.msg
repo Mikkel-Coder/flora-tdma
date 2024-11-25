@@ -24,17 +24,8 @@ using namespace inet;
 
 namespace flora_tdma;
 
-class LoRaTDMAMacFrame extends inet::FieldsChunk {
+class LoRaTDMAGWFrame extends inet::FieldsChunk {
     inet::MacAddress transmitterAddress;
-    // inet::MacAddress receiverAddress;
-
-    // int sequenceNumber; // I dot not think that this is needed
-    // double LoRaTP;
-    // inet::Hz LoRaCF;
-    // int LoRaSF;
-    // inet::Hz LoRaBW;
-    // int LoRaCR;
-    // bool LoRaUseHeader;
-    // double RSSI;
-    // double SNIR;
+    simtime_t syncTime;
+    inet::MacAddress timeslots[100];
 }

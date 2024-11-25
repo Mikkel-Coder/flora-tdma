@@ -110,7 +110,7 @@ void LoRaRadio::handleUpperPacket(Packet *packet)
         preamble->setSpreadFactor(tag->getSpreadFactor());
         preamble->setUseHeader(tag->getUseHeader());
         const auto & loraHeader =  packet->peekAtFront<LoRaTDMAMacFrame>();
-        preamble->setReceiverAddress(loraHeader->getReceiverAddress());
+        preamble->setReceiverAddress(MacAddress::BROADCAST_ADDRESS);
 
         auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();
         signalPowerReq->setPower(tag->getPower());

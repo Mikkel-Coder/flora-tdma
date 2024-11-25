@@ -39,22 +39,6 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     /** End of the Short Inter-Frame Time period */
     cMessage *endSifs = nullptr;
 
-    /**
-     * @name CsmaCaMac state variables
-     * Various state information checked and modified according to the state machine.
-     */
-    //@{ // TODO: Old impl, delete me later
-    // enum State {
-    //     IDLE,
-    //     TRANSMIT,
-    //     WAIT_DELAY_1, /* From this: This is used to alike LoRaWAN wait for receive window 1 */
-    //     LISTENING_1,
-    //     RECEIVING_1,
-    //     WAIT_DELAY_2, 
-    //     LISTENING_2,
-    //     RECEIVING_2, /* To this line is form LoRaWAN like */
-    // };
-
     /** @name MAC States */
     enum States {
       INIT,
@@ -80,36 +64,6 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     /** @name State transition messages */
     cMessage *endTransmission = nullptr;
     cMessage *endReception = nullptr;
-
-    /** @name Internal clock */
-    simtime_t internalclock;
-
-    /** @name Timer messages */
-    //@{
-    /** Timeout after the transmission of a Data frame */
-    // cMessage *endTransmission = nullptr;
-
-    // /** Timeout after the reception of a Data frame */
-    // cMessage *endReception = nullptr;
-
-    // /** Timeout after the reception of a Data frame */
-    // cMessage *droppedPacket = nullptr;
-
-    // /** End of the Delay_1 */
-    // cMessage *endDelay_1 = nullptr;
-
-    // /** End of the Listening_1 */
-    // cMessage *endListening_1 = nullptr;
-
-    // /** End of the Delay_2 */
-    // cMessage *endDelay_2 = nullptr;
-
-    // /** End of the Listening_2 */
-    // cMessage *endListening_2 = nullptr;
-
-    // /** Radio state change self message. Currently this is optimized away and sent directly */
-    // cMessage *mediumStateChange = nullptr;
-    // //@}
 
     /** @name Statistics */
     //@{
@@ -174,8 +128,6 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     virtual bool isReceiving();
     virtual bool isForUs(const Ptr<const LoRaTDMAMacFrame> &msg);
 
-    void turnOnReceiver(void);
-    void turnOffReceiver(void);
     virtual void processUpperPacket();
     //@}
 };

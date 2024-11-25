@@ -95,7 +95,8 @@ void LoRaTDMAGWMac::handleUpperMessage(cMessage *msg)
 
         // Making sure to tag the packet (for stats or something like that)
         auto tag = pkt->addTagIfAbsent<MacAddressReq>();
-        tag->setDestAddress(frame->getReceiverAddress());
+        // TODO: fix
+        // tag->setDestAddress(frame->getReceiverAddress());
 
         // We are now waiting for the DC, so set the variable
         waitingForDC = true;
@@ -103,12 +104,13 @@ void LoRaTDMAGWMac::handleUpperMessage(cMessage *msg)
         // Set delta based on spreading factor
         // TODO: refactor to a switch statement
         double delta;
-        if(frame->getLoRaSF() == 7) delta = 0.61696;
-        if(frame->getLoRaSF() == 8) delta = 1.23392;
-        if(frame->getLoRaSF() == 9) delta = 2.14016;
-        if(frame->getLoRaSF() == 10) delta = 4.28032;
-        if(frame->getLoRaSF() == 11) delta = 7.24992;
-        if(frame->getLoRaSF() == 12) delta = 14.49984;
+        // TODO: fix
+        // if(frame->getLoRaSF() == 7) delta = 0.61696;
+        // if(frame->getLoRaSF() == 8) delta = 1.23392;
+        // if(frame->getLoRaSF() == 9) delta = 2.14016;
+        // if(frame->getLoRaSF() == 10) delta = 4.28032;
+        // if(frame->getLoRaSF() == 11) delta = 7.24992;
+        // if(frame->getLoRaSF() == 12) delta = 14.49984;
 
         // Schedule the dutycycletimer to ring in delta seconds
         scheduleAt(simTime() + delta, dutyCycleTimer);
@@ -133,10 +135,11 @@ void LoRaTDMAGWMac::handleLowerMessage(cMessage *msg)
     const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
 
     // Check if it is broadcasted and send it up else drop the packet
-    if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
-        sendUp(pkt);
-    else
-        delete pkt;
+    // TODO: fix
+    // if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
+    //     sendUp(pkt);
+    // else
+    //     delete pkt;
 }
 
 void LoRaTDMAGWMac::sendPacketBack(Packet *receivedFrame)
@@ -148,7 +151,8 @@ void LoRaTDMAGWMac::sendPacketBack(Packet *receivedFrame)
     auto frameToSend = makeShared<LoRaTDMAMacFrame>();
     frameToSend->setChunkLength(B(par("headerLength").intValue()));
 
-    frameToSend->setReceiverAddress(frame->getTransmitterAddress());
+    // TODO: fix
+    // frameToSend->setReceiverAddress(frame->getTransmitterAddress());
     pktBack->insertAtFront(frameToSend);
     sendDown(pktBack);
 }

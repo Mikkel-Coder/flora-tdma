@@ -96,17 +96,18 @@ void LoRaGWRadio::handleUpperPacket(Packet *packet)
     const auto &frame = packet->peekAtFront<LoRaTDMAMacFrame>();
     auto preamble = makeShared<LoRaPhyPreamble>();
 
-    preamble->setBandwidth(frame->getLoRaBW());
-    preamble->setCenterFrequency(frame->getLoRaCF());
-    preamble->setCodeRendundance(frame->getLoRaCR());
-    preamble->setPower(mW(frame->getLoRaTP()));
-    preamble->setSpreadFactor(frame->getLoRaSF());
-    preamble->setUseHeader(frame->getLoRaUseHeader());
-    preamble->setReceiverAddress(frame->getReceiverAddress());
+    // TODO: fix later
+    // preamble->setBandwidth(frame->getLoRaBW());
+    // preamble->setCenterFrequency(frame->getLoRaCF());
+    // preamble->setCodeRendundance(frame->getLoRaCR());
+    // preamble->setPower(mW(frame->getLoRaTP()));
+    // preamble->setSpreadFactor(frame->getLoRaSF());
+    // preamble->setUseHeader(frame->getLoRaUseHeader());
+    // preamble->setReceiverAddress(frame->getReceiverAddress());
 
     /* Keep track of the power required to transmit the packet */
     auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();
-    signalPowerReq->setPower(mW(frame->getLoRaTP()));
+    // signalPowerReq->setPower(mW(frame->getLoRaTP()));
 
     preamble->setChunkLength(b(16)); /* This is not important because the preamble is 8+4.25 symbols */
     packet->insertAtFront(preamble); /* Be sure to place the preamble at front */

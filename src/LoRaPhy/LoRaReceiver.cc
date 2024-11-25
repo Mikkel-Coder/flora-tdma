@@ -95,8 +95,9 @@ bool LoRaReceiver::computeIsReceptionAttempted(const IListening *listening, cons
         MacAddress rec;
         if (loraPreamble)
             rec = loraPreamble->getReceiverAddress();
-        else if (loraMac)
-            rec = loraMac->getReceiverAddress();
+        // TODO: fix
+        // else if (loraMac)
+            // rec = loraMac->getReceiverAddress();
 
         if (iAmGateway == false) {
             auto *macLayer = check_and_cast<LoRaTDMAMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));

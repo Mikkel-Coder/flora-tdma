@@ -75,8 +75,9 @@ void PacketForwarder::handleMessage(cMessage *msg)
         EV << "Received LoRaMAC frame" << endl;
         auto pkt = check_and_cast<Packet*>(msg);
         const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
-        if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
-            processLoraMACPacket(pkt);
+        // TODO: fix
+        // if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
+        //     processLoraMACPacket(pkt);
     } else if (msg->arrivedOn("socketIn")) {
         // FIXME : debug for now to see if LoRaMAC frame received correctly from network server
         EV << "Received UDP packet" << endl;
@@ -105,8 +106,9 @@ void PacketForwarder::processLoraMACPacket(Packet *pk)
 
     W w_rssi = signalPowerInd->getPower();
     double rssi = w_rssi.get()*1000;
-    frame->setRSSI(math::mW2dBmW(rssi));
-    frame->setSNIR(snirInd->getMinimumSnir());
+    // TODO: fix
+    // frame->setRSSI(math::mW2dBmW(rssi));
+    // frame->setSNIR(snirInd->getMinimumSnir());
     pk->insertAtFront(frame);
 
     EV << frame->getTransmitterAddress() << endl;
