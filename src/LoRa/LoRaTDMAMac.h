@@ -36,7 +36,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     simtime_t broadcastGuard;
     double bitrate = NaN;
     int headerLength = -1;
-    int sequenceNumber = 0;
+    // int sequenceNumber = 0;
     //@}
 
     /** End of the Short Inter-Frame Time period */
@@ -113,7 +113,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details) override;
 
     virtual Packet *encapsulate(Packet *msg);
-    virtual Packet *decapsulate(Packet *frame);
+    virtual Packet *decapsulate(Packet *frame); // Remake this as a future feature
     //@}
 
     /**

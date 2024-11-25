@@ -65,7 +65,7 @@ void LoRaTDMAMac::initialize(int stage)
             address.setAddress(addressString);
         }
 
-        timeslotDuration = par('timeslotDuration');
+        timeslotDuration = par("timeslotDuration");
 
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
@@ -93,7 +93,7 @@ void LoRaTDMAMac::initialize(int stage)
         macState = INIT;
 
         // sequence number for messages
-        sequenceNumber = 0;
+        // sequenceNumber = 0;
 
         // statistics
         numSent = 0;
@@ -174,11 +174,13 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
             return;
         }
 
-        simtime_t time = clock->computeSimTimeFromClockTime(synctime);
+        simtime_t currenttime = clock->computeSimTimeFromClockTime(synctime);
         simtime_t offset = timeslotDuration*timeslotIdx;
 
-        scheduleAt(time + broadcastGuard + offset, startTXSlot); // Schedule our transmission slot
-        scheduleAt(time + broadcastGuard + offset + timeslotDuration, endTXSlot); // schedule the end of our transmission slot
+        EV_DEBUG << "Calculated offset: " << offset << endl;
+
+        scheduleAt(currenttime + broadcastGuard + offset, startTXSlot); // Schedule our transmission slot
+        scheduleAt(currenttime + broadcastGuard + offset + timeslotDuration, endTXSlot); // schedule the end of our transmission slot
 
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
@@ -233,12 +235,27 @@ void LoRaTDMAMac::handleState(cMessage *msg)
 
     case SLEEP:
         if (msg == startTXSlot) { // Transmission slot (aka my slot) has begun
-            radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
+            
+            if(txQueue->isEmpty()) {
+                /* If there is nothing in the queue,
+                 * there is no reason to turn on the transmitter and send
+                 */
+                EV << "Nothing to send, doing nothing" << endl;
+                cancelEvent(endTXSlot);
+                return;
+            }
 
-            // TODO: Make it send
+            // TODO: Should we return and have another function do the sending?, or encapsulate sending in another function
+            
+            // TODO: make the packet?
+
+            radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
 
             EV_DETAIL << "transition: SLEEP -> TRANSMIT" << endl;
             macState = TRANSMIT;
+
+            // TODO: send
+
         } else if (msg == startRXSlot) { // The gateways broadcast slot (receive slot) has begun
             radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
             EV_DETAIL << "transition: SLEEP -> LISTEN" << endl;
@@ -334,7 +351,6 @@ Packet *LoRaTDMAMac::encapsulate(Packet *msg)
      * but i do not think it is possible
      */
     frame->setTransmitterAddress(address);
-    ++sequenceNumber;
     msg->insertAtFront(frame);
     return msg;
 }
@@ -342,10 +358,7 @@ Packet *LoRaTDMAMac::encapsulate(Packet *msg)
 Packet *LoRaTDMAMac::decapsulate(Packet *frame)
 // TODO: change or remove
 {
-    auto loraHeader = frame->popAtFront<LoRaTDMAMacFrame>();
-    frame->addTagIfAbsent<MacAddressInd>()->setSrcAddress(loraHeader->getTransmitterAddress());
-    frame->addTagIfAbsent<InterfaceInd>()->setInterfaceId(networkInterface->getInterfaceId());
-    return frame;
+    throw cRuntimeError("Not implemented, that is happing?");
 }
 
 /*

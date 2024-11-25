@@ -17,7 +17,9 @@ function rebuild_inet() {
 	cd $PWD/../inet4.4 && \
 	make makefiles && \
 	make clean && \
+	echo -e "\n\n[+] RELEASE MODE:" && \
 	make MODE=release -j${CORES} && \
+	echo -e "\n\n[+] DEBUG MODE:" && \
 	make MODE=debug -j${CORES} && \
 	cd $OLDPWD
 }
@@ -25,7 +27,9 @@ function rebuild_inet() {
 function rebuild_flora() {
 	make makefiles && \
 	make clean && \
+	echo -e "\n\n[+] RELEASE MODE:" && \
 	make MODE=release -j${CORES} && \
+	echo -e "\n\n[+] DEBUG MODE:" && \
 	make MODE=debug -j${CORES}
 }
 
