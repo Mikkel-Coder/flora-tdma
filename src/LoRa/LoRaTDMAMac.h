@@ -4,13 +4,14 @@
 #include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
 #include "inet/linklayer/contract/IMacProtocol.h"
 #include "inet/linklayer/base/MacProtocolBase.h"
-#include "inet/common/FSMA.h"
 #include "inet/queueing/contract/IPacketQueue.h"
 #include "LoRaTDMAMacFrame_m.h"
+#include "LoRaTDMAGWFrame_m.h"
 #include "inet/common/Protocol.h"
 #include "inet/queueing/contract/IActivePacketSink.h"
 #include "inet/queueing/contract/IPacketQueue.h"
 #include "inet/linklayer/contract/IMacProtocol.h"
+#include "inet/clock/model/SettableClock.h"
 
 #include "LoRaRadio.h"
 
@@ -51,6 +52,8 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     IRadio *radio = nullptr;
     IRadio::TransmissionState transmissionState = IRadio::TRANSMISSION_STATE_UNDEFINED;
     IRadio::ReceptionState receptionState = IRadio::RECEPTION_STATE_UNDEFINED;
+
+    SettableClock *clock = nullptr;
 
     /** @name the mac state */
     States macState;

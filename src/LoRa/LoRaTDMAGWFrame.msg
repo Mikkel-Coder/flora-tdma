@@ -17,6 +17,7 @@ import inet.common.INETDefs;
 import inet.common.Units;
 import inet.linklayer.common.MacAddress;
 import inet.common.packet.chunk.Chunk;
+import inet.clock.contract.ClockTime;
 
 cplusplus {{
 using namespace inet;
@@ -26,6 +27,7 @@ namespace flora_tdma;
 
 class LoRaTDMAGWFrame extends inet::FieldsChunk {
     inet::MacAddress transmitterAddress;
-    simtime_t syncTime;
-    inet::MacAddress timeslots[100];
+    inet::clocktime_t syncTime;
+    // Order of timeslots matter, the slots will happen in the order of this array
+    inet::MacAddress timeslots[300];
 }

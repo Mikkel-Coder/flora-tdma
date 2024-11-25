@@ -72,6 +72,10 @@ void LoRaTDMAMac::initialize(int stage)
         radioModule->subscribe(LoRaRadio::droppedPacket, this);
         radio = check_and_cast<IRadio *>(radioModule);
 
+        // Get the clock
+        cModule *clockModule = getModuleFromPar<cModule>(par("clockModule"), this);
+        clock = check_and_cast<SettableClock *>(clockModule);
+        
         // initialize self messages
         startRXSlot = new cMessage("startRXSlot");
         endRXSlot = new cMessage("endRXSlot");
@@ -142,7 +146,41 @@ void LoRaTDMAMac::handleUpperPacket(Packet *packet)
 
 void LoRaTDMAMac::handleLowerPacket(Packet *msg)
 {
-    // MAGIC
+    // TODO: skip reception from other nodes
+    
+    if (macState == RECEIVE) {
+        auto pkt = check_and_cast<LoRaTDMAGWFrame *>(msg);
+        // TODO: sync the time
+        clocktime_t synctime = pkt->getSyncTime();
+
+        clock->setClockTime(synctime);
+
+        int timeslotIdx = -1;      
+        auto timeslotarraysize = pkt->getTimeslotsArraySize();
+        for (int i = 0; i < timeslotarraysize; i++)
+        {
+            MacAddress timeslotAddr = pkt->getTimeslots(i);
+            if (timeslotAddr == address)
+            {
+                timeslotIdx = i;
+                break;
+            }
+        }
+
+        if (timeslotIdx == -1) {
+            EV_DETAIL << "No timeslot for me" << endl;
+            return;
+        }
+
+        simtime_t time = clock->computeSimTimeFromClockTime(synctime);
+        // TODO: add the offset
+        // scheduleAt(time + offset, startTXSlot);
+
+
+    } else {
+        delete msg;
+    }
+    
 }
 
 void LoRaTDMAMac::processUpperPacket()
@@ -297,6 +335,7 @@ Packet *LoRaTDMAMac::encapsulate(Packet *msg)
 }
 
 Packet *LoRaTDMAMac::decapsulate(Packet *frame)
+// TODO: change or remove
 {
     auto loraHeader = frame->popAtFront<LoRaTDMAMacFrame>();
     frame->addTagIfAbsent<MacAddressInd>()->setSrcAddress(loraHeader->getTransmitterAddress());
