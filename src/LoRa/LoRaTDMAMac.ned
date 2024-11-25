@@ -23,6 +23,8 @@ module LoRaTDMAMac extends CsmaCaMac
 {
     parameters:
         bitrate = 250bps;
+        timeslotDuration = default(12s);
+        broadcastGuard = default(1s);
         @class(LoRaTDMAMac);
     gates:
         input upperMgmtIn;

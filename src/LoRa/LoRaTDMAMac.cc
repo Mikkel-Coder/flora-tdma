@@ -65,6 +65,8 @@ void LoRaTDMAMac::initialize(int stage)
             address.setAddress(addressString);
         }
 
+        timeslotDuration = par('timeslotDuration');
+
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
         radioModule->subscribe(IRadio::receptionStateChangedSignal, this);
@@ -173,11 +175,14 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
         }
 
         simtime_t time = clock->computeSimTimeFromClockTime(synctime);
-        // TODO: add the offset
-        // scheduleAt(time + offset, startTXSlot);
+        simtime_t offset = timeslotDuration*timeslotIdx;
 
+        scheduleAt(time + broadcastGuard + offset, startTXSlot); // Schedule our transmission slot
+        scheduleAt(time + broadcastGuard + offset + timeslotDuration, endTXSlot); // schedule the end of our transmission slot
 
     } else {
+        EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
+        EV_DEBUG << "macState: " << macState << endl;
         delete msg;
     }
     
@@ -249,7 +254,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         }
         break;
 
-    case LISTEN:
+    case LISTEN: // TODO: find out how to switch to receive
         if (msg == endRXSlot) { // End of the receive slot
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: LISTEN -> SLEEP" << endl;

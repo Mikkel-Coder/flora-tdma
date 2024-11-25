@@ -32,6 +32,8 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
      */
     //@{
     MacAddress address;
+    simtime_t timeslotDuration;
+    simtime_t broadcastGuard;
     double bitrate = NaN;
     int headerLength = -1;
     int sequenceNumber = 0;
