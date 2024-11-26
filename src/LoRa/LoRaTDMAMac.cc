@@ -32,10 +32,10 @@ Define_Module(LoRaTDMAMac);
 LoRaTDMAMac::~LoRaTDMAMac()
 {
     /* self cMessages */
-    cancelAndDelete(startRXSlot);
-    cancelAndDelete(endRXSlot);
-    cancelAndDelete(startTXSlot);
-    cancelAndDelete(endTXSlot);
+    cancelAndDeleteClockEvent(startRXSlot);
+    cancelAndDeleteClockEvent(endRXSlot);
+    cancelAndDeleteClockEvent(startTXSlot);
+    cancelAndDeleteClockEvent(endTXSlot);
     cancelAndDelete(endTransmission);
     cancelAndDelete(endReception);
 
@@ -47,7 +47,7 @@ LoRaTDMAMac::~LoRaTDMAMac()
  */
 void LoRaTDMAMac::initialize(int stage)
 {
-    MacProtocolBase::initialize(stage);
+    ClockUserModuleMixin<MacProtocolBase>::initialize(stage);
     if (stage == INITSTAGE_LOCAL) {
         EV << "Initializing stage 0\n";
 
@@ -74,15 +74,11 @@ void LoRaTDMAMac::initialize(int stage)
         radioModule->subscribe(LoRaRadio::droppedPacket, this);
         radio = check_and_cast<IRadio *>(radioModule);
 
-        // Get the clock
-        cModule *clockModule = getModuleFromPar<cModule>(par("clockModule"), this);
-        clock = check_and_cast<SettableClock *>(clockModule);
-        
         // initialize self messages
-        startRXSlot = new cMessage("startRXSlot");
-        endRXSlot = new cMessage("endRXSlot");
-        startTXSlot = new cMessage("startTXSlot");
-        endTXSlot = new cMessage("endTXSlot");
+        startRXSlot = new ClockEvent("startRXSlot");
+        endRXSlot = new ClockEvent("endRXSlot");
+        startTXSlot = new ClockEvent("startTXSlot");
+        endTXSlot = new ClockEvent("endTXSlot");
         endTransmission = new cMessage("endTransmission");
         endReception = new cMessage("endReception");
 
@@ -174,13 +170,12 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
             return;
         }
 
-        simtime_t currenttime = clock->computeSimTimeFromClockTime(synctime);
-        simtime_t offset = timeslotDuration*timeslotIdx;
+        clocktime_t offset = timeslotDuration*timeslotIdx;
 
         EV_DEBUG << "Calculated offset: " << offset << endl;
 
-        scheduleAt(currenttime + broadcastGuard + offset, startTXSlot); // Schedule our transmission slot
-        scheduleAt(currenttime + broadcastGuard + offset + timeslotDuration, endTXSlot); // schedule the end of our transmission slot
+        scheduleClockEventAfter(broadcastGuard + offset, startTXSlot); // Schedule our transmission slot
+        scheduleClockEventAfter(broadcastGuard + offset + timeslotDuration, endTXSlot); // schedule the end of our transmission slot
 
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
