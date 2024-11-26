@@ -12,7 +12,6 @@
 #include "inet/queueing/contract/IPacketQueue.h"
 #include "inet/linklayer/contract/IMacProtocol.h"
 #include "inet/clock/model/SettableClock.h"
-#include "inet/common/clock/ClockUserModuleMixin.h"
 
 #include "LoRaRadio.h"
 
@@ -25,7 +24,7 @@ using namespace physicallayer;
  * There is no CMSA class in INET4.4 or OMNet++ 6.1?!
  */
 
-class LoRaTDMAMac : public ClockUserModuleMixin<MacProtocolBase>, public IMacProtocol, public queueing::IActivePacketSink
+class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing::IActivePacketSink
 {
   protected:
     /**
@@ -33,8 +32,10 @@ class LoRaTDMAMac : public ClockUserModuleMixin<MacProtocolBase>, public IMacPro
      */
     //@{
     MacAddress address;
-    clocktime_t timeslotDuration;
+    clocktime_t txslotDuration;
+    clocktime_t rxslotDuration;
     clocktime_t broadcastGuard;
+    clocktime_t firstRxSlot;
     double bitrate = NaN;
     int headerLength = -1;
     // int sequenceNumber = 0;
