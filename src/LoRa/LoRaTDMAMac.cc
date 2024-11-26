@@ -24,6 +24,7 @@
 #include "inet/common/ProtocolTag_m.h"
 #include "inet/linklayer/common/InterfaceTag_m.h"
 
+#define CHECKCLEV(clev, value) clev && clev == value
 
 namespace flora_tdma {
 
@@ -32,10 +33,10 @@ Define_Module(LoRaTDMAMac);
 LoRaTDMAMac::~LoRaTDMAMac()
 {
     /* self cMessages */
-    cancelAndDelete(startRXSlot);
-    cancelAndDelete(endRXSlot);
-    cancelAndDelete(startTXSlot);
-    cancelAndDelete(endTXSlot);
+    clock->cancelClockEvent(startRXSlot);
+    clock->cancelClockEvent(endRXSlot);
+    clock->cancelClockEvent(startTXSlot);
+    clock->cancelClockEvent(endTXSlot);
     cancelAndDelete(endTransmission);
     cancelAndDelete(endReception);
 
@@ -65,7 +66,10 @@ void LoRaTDMAMac::initialize(int stage)
             address.setAddress(addressString);
         }
 
-        timeslotDuration = par("timeslotDuration");
+        txslotDuration = par("txslotDuration");
+        rxslotDuration = par("rxslotDuration");
+        broadcastGuard = par("broadcastGuard");
+        firstRxSlot = par("firstRxSlot");
 
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
@@ -74,15 +78,14 @@ void LoRaTDMAMac::initialize(int stage)
         radioModule->subscribe(LoRaRadio::droppedPacket, this);
         radio = check_and_cast<IRadio *>(radioModule);
 
-        // Get the clock
         cModule *clockModule = getModuleFromPar<cModule>(par("clockModule"), this);
         clock = check_and_cast<SettableClock *>(clockModule);
-        
+
         // initialize self messages
-        startRXSlot = new cMessage("startRXSlot");
-        endRXSlot = new cMessage("endRXSlot");
-        startTXSlot = new cMessage("startTXSlot");
-        endTXSlot = new cMessage("endTXSlot");
+        startRXSlot = new ClockEvent("startRXSlot");
+        endRXSlot = new ClockEvent("endRXSlot");
+        startTXSlot = new ClockEvent("startTXSlot");
+        endTXSlot = new ClockEvent("endTXSlot");
         endTransmission = new cMessage("endTransmission");
         endReception = new cMessage("endReception");
 
@@ -102,6 +105,9 @@ void LoRaTDMAMac::initialize(int stage)
         // initialize watches
         WATCH(numSent);
         WATCH(numReceived);
+
+        clock->scheduleClockEventAt(firstRxSlot, startRXSlot); // The very first receive to kickstart it all
+        clock->scheduleClockEventAt(firstRxSlot + rxslotDuration, endRXSlot); // and then end it at some point
     }
     // TODO: Use the function isInitializeStage()
     else if (stage == INITSTAGE_LINK_LAYER)
@@ -137,7 +143,7 @@ void LoRaTDMAMac::configureNetworkInterface()
  */
 void LoRaTDMAMac::handleSelfMessage(cMessage *msg)
 {
-    EV << "received self message: " << msg << endl;
+    EV << "Received self message: " << msg << endl;
     handleState(msg); 
 }
 
@@ -152,7 +158,6 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
     
     if (macState == RECEIVE) {
         auto pkt = check_and_cast<LoRaTDMAGWFrame *>(msg);
-        // TODO: sync the time
         clocktime_t synctime = pkt->getSyncTime();
 
         clock->setClockTime(synctime);
@@ -170,17 +175,29 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
         }
 
         if (timeslotIdx == -1) {
-            EV_DETAIL << "No timeslot for me" << endl;
+            EV << "No timeslot for me" << endl;
             return;
         }
 
-        simtime_t currenttime = clock->computeSimTimeFromClockTime(synctime);
-        simtime_t offset = timeslotDuration*timeslotIdx;
+        /* Calculate the clock time when we can send, this is based on 3 things:
+         * 1. The Duration of a txSlot times our timeslotIdx (so the times of all transmissions before ours)
+         * 2. The broadcast guard interval
+         * 3. The end of the receive slot (as given by the arrival clock of the endRXSlot)
+         */
+        clocktime_t txStartTime = txslotDuration*timeslotIdx + broadcastGuard + endRXSlot->getArrivalClockTime();
+        EV << "Full clock offset for start transmit is  " << txStartTime << endl;
+        EV << "Full clock offset for end transmit is  " << txStartTime + rxslotDuration << endl;
+        clock->scheduleClockEventAt(txStartTime, startTXSlot); // Schedule our transmission slot
+        clock->scheduleClockEventAt(txStartTime + txslotDuration, endTXSlot); // Schedule the end of our transmission slot
 
-        EV_DEBUG << "Calculated offset: " << offset << endl;
-
-        scheduleAt(currenttime + broadcastGuard + offset, startTXSlot); // Schedule our transmission slot
-        scheduleAt(currenttime + broadcastGuard + offset + timeslotDuration, endTXSlot); // schedule the end of our transmission slot
+        /* Calculate the next receive slot, this is done in similar fashions as the transmit slot
+         * But we take the total size of all transmissions in this "round"
+         */
+        clocktime_t rxStartTime = txslotDuration*timeslotarraysize + broadcastGuard + endRXSlot->getArrivalClockTime();
+        EV << "Full clock offset for start receive is  " << rxStartTime << endl;
+        EV << "Full clock offset for end receive is  " << rxStartTime + rxslotDuration << endl;
+        clock->scheduleClockEventAt(rxStartTime, startRXSlot); // Schedule the next receive slot to listen to the gateway
+        clock->scheduleClockEventAt(rxStartTime + rxslotDuration, endRXSlot); // And the end
 
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
@@ -226,6 +243,11 @@ void LoRaTDMAMac::handlePullPacketProcessed(Packet *packet, cGate *gate, bool su
 
 void LoRaTDMAMac::handleState(cMessage *msg)
 {
+    auto msgclev = dynamic_cast<ClockEvent *>(msg);
+    if(msgclev) {
+        EV << "Arrival clock time for message: " << msgclev->getArrivalClockTime() << endl;
+    }
+
     switch (macState)
     {
     case INIT:
@@ -234,14 +256,14 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         break;
 
     case SLEEP:
-        if (msg == startTXSlot) { // Transmission slot (aka my slot) has begun
+        if (CHECKCLEV(msgclev, startTXSlot)) { // Transmission slot (aka my slot) has begun
             
             if(txQueue->isEmpty()) {
                 /* If there is nothing in the queue,
                  * there is no reason to turn on the transmitter and send
                  */
                 EV << "Nothing to send, doing nothing" << endl;
-                cancelEvent(endTXSlot);
+                clock->cancelClockEvent(endTXSlot);
                 return;
             }
 
@@ -256,7 +278,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
 
             // TODO: send
 
-        } else if (msg == startRXSlot) { // The gateways broadcast slot (receive slot) has begun
+        } else if (CHECKCLEV(msgclev, startRXSlot)) { // The gateways broadcast slot (receive slot) has begun
             radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
             EV_DETAIL << "transition: SLEEP -> LISTEN" << endl;
             macState = LISTEN;
@@ -264,7 +286,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         break;
 
     case TRANSMIT:
-        if (msg == endTXSlot) { // End of the transmission slot
+        if (CHECKCLEV(msgclev, endTXSlot)) { // End of the transmission slot
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: TRANSMIT -> SLEEP" << endl;
             macState = SLEEP;
@@ -272,7 +294,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         break;
 
     case LISTEN: // TODO: find out how to switch to receive
-        if (msg == endRXSlot) { // End of the receive slot
+        if (CHECKCLEV(msgclev, endRXSlot)) { // End of the receive slot
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: LISTEN -> SLEEP" << endl;
             macState = SLEEP;
@@ -280,7 +302,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         break;
 
     case RECEIVE:
-        if (msg == endRXSlot) { // End of the receive slot
+        if (CHECKCLEV(msgclev, endRXSlot)) { // End of the receive slot
 
             // TODO: cancel reception
             

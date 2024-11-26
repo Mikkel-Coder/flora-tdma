@@ -32,8 +32,10 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
      */
     //@{
     MacAddress address;
-    simtime_t timeslotDuration;
-    simtime_t broadcastGuard;
+    clocktime_t txslotDuration;
+    clocktime_t rxslotDuration;
+    clocktime_t broadcastGuard;
+    clocktime_t firstRxSlot;
     double bitrate = NaN;
     int headerLength = -1;
     // int sequenceNumber = 0;
@@ -61,10 +63,10 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     States macState;
 
     /** @name Timer messages */
-    cMessage *startRXSlot = nullptr;
-    cMessage *endRXSlot = nullptr;
-    cMessage *startTXSlot = nullptr;
-    cMessage *endTXSlot = nullptr;
+    ClockEvent *startRXSlot = nullptr;
+    ClockEvent *endRXSlot = nullptr;
+    ClockEvent *startTXSlot = nullptr;
+    ClockEvent *endTXSlot = nullptr;
 
     /** @name State transition messages */
     cMessage *endTransmission = nullptr;
