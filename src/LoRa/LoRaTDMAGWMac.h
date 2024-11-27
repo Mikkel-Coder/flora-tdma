@@ -23,8 +23,11 @@
 #include "inet/linklayer/common/InterfaceTag_m.h"
 #include "inet/linklayer/common/MacAddressTag_m.h"
 #include "inet/common/ModuleAccess.h"
+#include <vector>
 
+#include "LoRaTDMAMac.h"
 #include "LoRaTDMAMacFrame_m.h"
+#include "LoRaTDMAGWFrame_m.h"
 
 #if INET_VERSION < 0x0403 || ( INET_VERSION == 0x0403 && INET_PATCH_LEVEL == 0x00 )
 #  error At least INET 4.3.1 is required. Please update your INET dependency and fully rebuild the project.
@@ -36,20 +39,36 @@ using namespace inet::physicallayer;
 
 class LoRaTDMAGWMac: public MacProtocolBase {
 public:
-    bool waitingForDC;
-    cMessage *dutyCycleTimer;
     virtual void initialize(int stage) override;
     virtual void finish() override;
     virtual void configureNetworkInterface() override;
     long GW_forwardedDown;
     long GW_droppedDC;
+    int numOfTimeslots;
+    simtime_t txslotDuration;
+    simtime_t rxslotDuration;
+    simtime_t broadcastGuard;
+    simtime_t firstTxSlot;
 
-    virtual void handleUpperMessage(cMessage *msg) override;
+    cMessage *startBroadcast;
+    cMessage *endBroadcast;
+
+    MacAddress clients[1000];
+    std::vector<MacAddress> *timeslots;
+
+    /** @name MAC States */
+    enum States {
+      INIT,
+      TRANSMIT,
+      RECEIVE,
+    };
+
+    /** @name the mac state */
+    States macState;
+
     virtual void handleLowerMessage(cMessage *msg) override;
     virtual void handleSelfMessage(cMessage *message) override;
-
-    void sendPacketBack(Packet *receivedFrame);
-    void createFakeLoRaMacFrame();
+    
     virtual MacAddress getAddress();
 
 protected:
@@ -57,6 +76,10 @@ protected:
 
     IRadio *radio = nullptr;
     IRadio::TransmissionState transmissionState = IRadio::TRANSMISSION_STATE_UNDEFINED;
+
+    virtual void createTimeslots();
+    virtual LoRaTDMAGWFrame *createFrame();
+    virtual void handleState(cMessage *msg);
 
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details) override;
 };

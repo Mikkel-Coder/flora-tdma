@@ -73,9 +73,9 @@ void LoRaTDMAMac::initialize(int stage)
 
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
-        radioModule->subscribe(IRadio::receptionStateChangedSignal, this);
-        radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
-        radioModule->subscribe(LoRaRadio::droppedPacket, this);
+        // radioModule->subscribe(IRadio::receptionStateChangedSignal, this);
+        // radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
+        // radioModule->subscribe(LoRaRadio::droppedPacket, this);
         radio = check_and_cast<IRadio *>(radioModule);
 
         cModule *clockModule = getModuleFromPar<cModule>(par("clockModule"), this);
@@ -108,6 +108,7 @@ void LoRaTDMAMac::initialize(int stage)
 
         clock->scheduleClockEventAt(firstRxSlot, startRXSlot); // The very first receive to kickstart it all
         clock->scheduleClockEventAt(firstRxSlot + rxslotDuration, endRXSlot); // and then end it at some point
+        handleState(nullptr);
     }
     // TODO: Use the function isInitializeStage()
     else if (stage == INITSTAGE_LINK_LAYER)

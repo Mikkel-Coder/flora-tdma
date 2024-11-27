@@ -24,6 +24,8 @@ using namespace physicallayer;
  * There is no CMSA class in INET4.4 or OMNet++ 6.1?!
  */
 
+// NOTE: the error then I used clockusermixin was not from that fact,
+// may refactor to clockusermixin if we have time in the future
 class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing::IActivePacketSink
 {
   protected:
@@ -133,7 +135,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     virtual Packet *getCurrentTransmission();
 
     virtual bool isReceiving();
-    virtual bool isForUs(const Ptr<const LoRaTDMAMacFrame> &msg);
+    // virtual bool isForUs(const Ptr<const LoRaTDMAMacFrame> &msg);
 
     virtual void processUpperPacket();
     //@}

@@ -30,32 +30,70 @@ void LoRaTDMAGWMac::initialize(int stage)
     if (stage == INITSTAGE_LOCAL) {
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
-        radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
+        // radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
         radio = check_and_cast<IRadio *>(radioModule);
-        waitingForDC = false;
-        dutyCycleTimer = new cMessage("Duty Cycle Timer");
         const char *addressString = par("address");
         GW_forwardedDown = 0;
         GW_droppedDC = 0;
+        numOfTimeslots = par("numOfTimeslots");
+        txslotDuration = par("txslotDuration");
+        rxslotDuration = par("rxslotDuration");
+        broadcastGuard = par("broadcastGuard");
+        firstTxSlot = par("firstTxSlot");
+
+        startBroadcast = new cMessage("startBroadcast");
+        endBroadcast = new cMessage("endBroadcast");
+
+        timeslots = new std::vector<MacAddress>(300);
+
         if (!strcmp(addressString, "auto")) {
             // assign automatic address
             address = MacAddress::generateAutoAddress();
             // change module parameter from "auto" to concrete address
             par("address").setStringValue(address.str().c_str());
-        }
-        else
+        } else {
             address.setAddress(addressString);
+        }
+
+        // state variables
+        macState = INIT;
+        
+        scheduleAt(firstTxSlot, startBroadcast);
+        scheduleAt(firstTxSlot + txslotDuration, endBroadcast);
+        handleState(nullptr);
     }
     else if (stage == INITSTAGE_LINK_LAYER) {
-        radio->setRadioMode(IRadio::RADIO_MODE_TRANSCEIVER);
+        // This should populate the client array with macadresses
+        size_t i = 0;
+        cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+        for (SubmoduleIterator it(network); !it.end(); ++it) {
+            cModule *mod = *it;
+            EV_DETAIL << "Searching in " << mod << endl;
+
+            cModule *nicMod = mod->getSubmodule("LoRaNic");
+            if (nicMod != nullptr) {
+                // It has a LoRaNic
+                EV_DETAIL << "Found nic: " << nicMod << endl;
+                cModule *macMod = nicMod->getSubmodule("mac");
+                if (macMod != nullptr) {
+                    // Found a mac module
+                    EV_DETAIL << "Found mac: " << macMod << endl;
+                    LoRaTDMAMac *nodeMac = dynamic_cast<LoRaTDMAMac *>(macMod);
+                    MacAddress nodeAddress = nodeMac->getAddress();
+                    EV_DETAIL << "Node address: " << nodeAddress << endl;
+                    clients[i++] = nodeAddress;
+                }
+            }
+            if (i > 1000) {
+                throw cRuntimeError("Too many clients");
+            }
+        }
+        radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
     }
 }
 
 void LoRaTDMAGWMac::finish()
 {
-    recordScalar("GW_forwardedDown", GW_forwardedDown);
-    recordScalar("GW_droppedDC", GW_droppedDC);
-    cancelAndDelete(dutyCycleTimer);
 }
 
 
@@ -76,55 +114,8 @@ void LoRaTDMAGWMac::configureNetworkInterface()
 
 void LoRaTDMAGWMac::handleSelfMessage(cMessage *msg)
 {
-    // We only have a dutycycletimer that when rings we stop waiting for the DC
-    if(msg == dutyCycleTimer) waitingForDC = false;
-}
-
-void LoRaTDMAGWMac::handleUpperMessage(cMessage *msg)
-{
-    // If we arent waiting for the DC
-    if(waitingForDC == false)
-    {
-        // Make the message a packet and get the LoRaMacFrame at the start of it
-        auto pkt = check_and_cast<Packet *>(msg);
-        const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
-
-        // Remove the control info if it exists
-        if (pkt->getControlInfo())
-            delete pkt->removeControlInfo();
-
-        // Making sure to tag the packet (for stats or something like that)
-        auto tag = pkt->addTagIfAbsent<MacAddressReq>();
-        // TODO: fix
-        // tag->setDestAddress(frame->getReceiverAddress());
-
-        // We are now waiting for the DC, so set the variable
-        waitingForDC = true;
-
-        // Set delta based on spreading factor
-        // TODO: refactor to a switch statement
-        double delta;
-        // TODO: fix
-        // if(frame->getLoRaSF() == 7) delta = 0.61696;
-        // if(frame->getLoRaSF() == 8) delta = 1.23392;
-        // if(frame->getLoRaSF() == 9) delta = 2.14016;
-        // if(frame->getLoRaSF() == 10) delta = 4.28032;
-        // if(frame->getLoRaSF() == 11) delta = 7.24992;
-        // if(frame->getLoRaSF() == 12) delta = 14.49984;
-
-        // Schedule the dutycycletimer to ring in delta seconds
-        scheduleAt(simTime() + delta, dutyCycleTimer);
-
-        // Counter, tagging and sending the packet to the lower layer
-        GW_forwardedDown++;
-        pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
-        sendDown(pkt);
-    }
-    else // If we where waiting for the DC drop the packet
-    {
-        GW_droppedDC++;
-        delete msg;
-    }
+    EV << "Received self message: " << msg << endl;
+    handleState(msg);
 }
 
 void LoRaTDMAGWMac::handleLowerMessage(cMessage *msg)
@@ -133,28 +124,78 @@ void LoRaTDMAGWMac::handleLowerMessage(cMessage *msg)
     auto pkt = check_and_cast<Packet *>(msg);
     auto header = pkt->popAtFront<LoRaPhyPreamble>();
     const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
-
-    // Check if it is broadcasted and send it up else drop the packet
-    // TODO: fix
-    // if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
-    //     sendUp(pkt);
-    // else
-    //     delete pkt;
+    EV << "Received packet: " << pkt << endl;
+    EV << "HEADER: " << header << endl;
+    EV << "MAC FRAME: " << frame << endl;
 }
 
-void LoRaTDMAGWMac::sendPacketBack(Packet *receivedFrame)
-{
-    // Make a packet to send back to the sender
-    const auto &frame = receivedFrame->peekAtFront<LoRaTDMAMacFrame>();
-    EV << "sending Data frame back" << endl;
-    auto pktBack = new Packet("LoraPacket");
-    auto frameToSend = makeShared<LoRaTDMAMacFrame>();
-    frameToSend->setChunkLength(B(par("headerLength").intValue()));
+void LoRaTDMAGWMac::createTimeslots() {
+    // Make sure that the timeslots are empty
+    timeslots->clear();
 
-    // TODO: fix
-    // frameToSend->setReceiverAddress(frame->getTransmitterAddress());
-    pktBack->insertAtFront(frameToSend);
-    sendDown(pktBack);
+    // TODO: make this not a loop and something more intelligent
+    // Clients 300+ do not have timeslots
+    for (size_t i = 0; i < 300; i++) {
+        timeslots->push_back(clients[i]);
+    }
+
+    EV_DETAIL << "Generated timeslots: " << timeslots << endl;
+    ASSERT(timeslots->size() == 300);
+}
+
+LoRaTDMAGWFrame *LoRaTDMAGWMac::createFrame() {
+    LoRaTDMAGWFrame *frame = new LoRaTDMAGWFrame();
+    
+    simtime_t syncTime = simTime(); // TODO: calculate offset from transmission time
+
+    frame->setTransmitterAddress(address);
+    frame->setSyncTime(SIMTIME_AS_CLOCKTIME(syncTime));
+
+    createTimeslots();
+
+    std::vector<MacAddress>& vecRef = *timeslots;
+    for (size_t i = 0; i < timeslots->size(); i++) {
+        frame->setTimeslots(i, vecRef[i]);
+    }
+
+    EV_DETAIL << "Created " << frame << endl;
+
+    return frame;
+} 
+
+void LoRaTDMAGWMac::handleState(cMessage *msg)
+{
+    switch (macState)
+    {
+    case INIT:
+        EV_DETAIL << "Mac Initialized, transition: INIT -> SLEEP" << endl;
+        macState = RECEIVE;
+        break;
+
+    case TRANSMIT:
+        if (msg == endBroadcast) {
+            radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
+            EV_DETAIL << "transition: TRANSMIT -> RECEIVE" << endl;
+            macState = RECEIVE;
+        }
+        break;
+    
+    case RECEIVE:
+        if (msg == startBroadcast)
+        {
+            radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
+            EV_DETAIL << "transition: RECEIVE -> TRANSMIT" << endl;
+            macState = TRANSMIT;
+
+            LoRaTDMAGWFrame *frame = createFrame();
+        }
+        
+        break;
+    
+    default:
+        throw cRuntimeError("Unknown MAC State: %d", macState);
+        break;
+    }
 }
 
 void LoRaTDMAGWMac::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)
