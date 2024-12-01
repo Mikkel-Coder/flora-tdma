@@ -143,8 +143,8 @@ void LoRaTDMAGWMac::createTimeslots() {
     ASSERT(timeslots->size() == 300);
 }
 
-LoRaTDMAGWFrame *LoRaTDMAGWMac::createFrame() {
-    LoRaTDMAGWFrame *frame = new LoRaTDMAGWFrame();
+IntrusivePtr<LoRaTDMAGWFrame> LoRaTDMAGWMac::createFrame() {
+    IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
     
     simtime_t syncTime = simTime(); // TODO: calculate offset from transmission time
 
@@ -187,7 +187,11 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             EV_DETAIL << "transition: RECEIVE -> TRANSMIT" << endl;
             macState = TRANSMIT;
 
-            LoRaTDMAGWFrame *frame = createFrame();
+            Packet *pkt = new Packet("Gateway Broadcast", 0);
+            IntrusivePtr<LoRaTDMAGWFrame> frame = createFrame();
+            pkt->insertAtBack(frame);
+
+            sendDown(pkt);
         }
         
         break;
