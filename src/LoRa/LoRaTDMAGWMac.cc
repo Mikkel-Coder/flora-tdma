@@ -189,7 +189,8 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
 
             Packet *pkt = new Packet("Gateway Broadcast", 0);
             IntrusivePtr<LoRaTDMAGWFrame> frame = createFrame();
-            pkt->insertAtBack(frame);
+            frame->setChunkLength(b(1)); // FIXME: this is low now, find real length later
+            pkt->insertAtFront(frame);
 
             sendDown(pkt);
         }

@@ -93,17 +93,17 @@ void LoRaGWRadio::handleUpperPacket(Packet *packet)
     EV << packet->getDetailStringRepresentation(evFlags) << endl;
 
     /* Convert the upper layer packet to a frame and set the right parameters */
-    const auto &frame = packet->peekAtFront<LoRaTDMAMacFrame>();
+    const auto &frame = packet->peekAtFront<LoRaTDMAGWFrame>();
     auto preamble = makeShared<LoRaPhyPreamble>();
 
     // TODO: fix later
-    // preamble->setBandwidth(frame->getLoRaBW());
-    // preamble->setCenterFrequency(frame->getLoRaCF());
-    // preamble->setCodeRendundance(frame->getLoRaCR());
-    // preamble->setPower(mW(frame->getLoRaTP()));
-    // preamble->setSpreadFactor(frame->getLoRaSF());
-    // preamble->setUseHeader(frame->getLoRaUseHeader());
-    // preamble->setReceiverAddress(frame->getReceiverAddress());
+    preamble->setBandwidth(Hz(125));
+    preamble->setCenterFrequency(MHz(863));
+    preamble->setCodeRendundance(4);
+    preamble->setPower(mW(10));
+    preamble->setSpreadFactor(12);
+    preamble->setUseHeader(true);
+    preamble->setReceiverAddress(MacAddress::BROADCAST_ADDRESS);
 
     /* Keep track of the power required to transmit the packet */
     auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();
