@@ -73,7 +73,7 @@ void LoRaTDMAMac::initialize(int stage)
 
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
-        // radioModule->subscribe(IRadio::receptionStateChangedSignal, this);
+        radioModule->subscribe(IRadio::receptionStateChangedSignal, this);
         // radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
         // radioModule->subscribe(LoRaRadio::droppedPacket, this);
         radio = check_and_cast<IRadio *>(radioModule);
@@ -88,6 +88,8 @@ void LoRaTDMAMac::initialize(int stage)
         endTXSlot = new ClockEvent("endTXSlot");
         endTransmission = new cMessage("endTransmission");
         endReception = new cMessage("endReception");
+        mediumStateChange = new cMessage("mediumStateChange");
+        endRXEarly = new cMessage("endRXEarly");
 
         // set up internal queue
         txQueue = getQueue(gate(upperLayerInGateId));
@@ -158,16 +160,19 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
     // TODO: skip reception from other nodes
     
     if (macState == RECEIVE) {
-        auto pkt = check_and_cast<LoRaTDMAGWFrame *>(msg);
-        clocktime_t synctime = pkt->getSyncTime();
+
+        const auto &chunk = msg->peekAtFront<Chunk>();
+        Ptr<LoRaTDMAGWFrame> frame = dynamicPtrCast<LoRaTDMAGWFrame>(constPtrCast<Chunk>(chunk));
+
+        clocktime_t synctime = frame->getSyncTime();
 
         clock->setClockTime(synctime);
 
         int timeslotIdx = -1;      
-        auto timeslotarraysize = pkt->getTimeslotsArraySize();
+        auto timeslotarraysize = frame->getTimeslotsArraySize();
         for (int i = 0; i < timeslotarraysize; i++)
         {
-            MacAddress timeslotAddr = pkt->getTimeslots(i);
+            MacAddress timeslotAddr = frame->getTimeslots(i);
             if (timeslotAddr == address)
             {
                 timeslotIdx = i;
@@ -186,8 +191,8 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
          * 3. The end of the receive slot (as given by the arrival clock of the endRXSlot)
          */
         clocktime_t txStartTime = txslotDuration*timeslotIdx + broadcastGuard + endRXSlot->getArrivalClockTime();
-        EV << "Full clock offset for start transmit is  " << txStartTime << endl;
-        EV << "Full clock offset for end transmit is  " << txStartTime + rxslotDuration << endl;
+        EV << "Full clock offset for start transmit is " << txStartTime << endl;
+        EV << "Full clock offset for end transmit is " << txStartTime + txslotDuration << endl;
         clock->scheduleClockEventAt(txStartTime, startTXSlot); // Schedule our transmission slot
         clock->scheduleClockEventAt(txStartTime + txslotDuration, endTXSlot); // Schedule the end of our transmission slot
 
@@ -195,11 +200,12 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
          * But we take the total size of all transmissions in this "round"
          */
         clocktime_t rxStartTime = txslotDuration*timeslotarraysize + broadcastGuard + endRXSlot->getArrivalClockTime();
-        EV << "Full clock offset for start receive is  " << rxStartTime << endl;
-        EV << "Full clock offset for end receive is  " << rxStartTime + rxslotDuration << endl;
+        EV << "Full clock offset for start receive is " << rxStartTime << endl;
+        EV << "Full clock offset for end receive is " << rxStartTime + rxslotDuration << endl;
+        clock->cancelClockEvent(endRXSlot); // Cancel the event before rescheduling
         clock->scheduleClockEventAt(rxStartTime, startRXSlot); // Schedule the next receive slot to listen to the gateway
         clock->scheduleClockEventAt(rxStartTime + rxslotDuration, endRXSlot); // And the end
-
+        handleState(endRXEarly);
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
         EV_DEBUG << "macState: " << macState << endl;
@@ -299,11 +305,14 @@ void LoRaTDMAMac::handleState(cMessage *msg)
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: LISTEN -> SLEEP" << endl;
             macState = SLEEP;
+        } else if (msg == mediumStateChange && radio->getReceptionState() == IRadio::RECEPTION_STATE_RECEIVING) {
+            EV_DETAIL << "transition: LISTEN -> RECEIVE" << endl;
+            macState = RECEIVE;
         }
         break;
 
     case RECEIVE:
-        if (CHECKCLEV(msgclev, endRXSlot)) { // End of the receive slot
+        if (CHECKCLEV(msgclev, endRXSlot) || msg == endRXEarly) { // End of the receive slot
 
             // TODO: cancel reception
             
@@ -326,42 +335,16 @@ void LoRaTDMAMac::handleState(cMessage *msg)
 void LoRaTDMAMac::receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details)
 {
     Enter_Method_Silent(); // this is an event but do not animate in GUI
-    
-    /* Check if we are receiving */
-    if (signalID == IRadio::receptionStateChangedSignal) {
+
+    if(signalID == IRadio::receptionStateChangedSignal) {
         IRadio::ReceptionState newRadioReceptionState = (IRadio::ReceptionState)value;
-
-        /* Remember to also change the FSM in the Radio to sleep */
-        /* BUG: We should check if the Radio is in TRANSMISSON_STATE_IDLE */
-        if (receptionState == IRadio::RECEPTION_STATE_RECEIVING) {
+        if (receptionState == IRadio::RECEPTION_STATE_RECEIVING && newRadioReceptionState == IRadio::RECEPTION_STATE_IDLE) {
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
         }
 
-        /* Now update our own FSM to the parsed state from Radio */
         receptionState = newRadioReceptionState;
-        // handleWithFsm(mediumStateChange); // Our own cMessage
-    }
-
-    /* Check if we would drop the packet */
-    else if (signalID == LoRaRadio::droppedPacket) {
-        /* If so then sleep the Radio and drop using our own FSM */
-        radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-    }
-
-    /* Check if we are transmitting */
-    else if (signalID == IRadio::transmissionStateChangedSignal) {
-        IRadio::TransmissionState newRadioTransmissionState = (IRadio::TransmissionState)value;
-
-        /* If our transmissionState is transmitting & our Radio state is idle */
-        if (transmissionState == IRadio::TRANSMISSION_STATE_TRANSMITTING && newRadioTransmissionState == IRadio::TRANSMISSION_STATE_IDLE) {
-            /* Then end our current transmission state */
-            // handleWithFsm(endTransmission);
-            /* And update the Radio to sleep mode */
-            radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
-        }
-        /* And remember to update our */
-        transmissionState = newRadioTransmissionState;
-    }
+        handleState(mediumStateChange);
+    }    
 }
 
 Packet *LoRaTDMAMac::encapsulate(Packet *msg)
@@ -408,12 +391,6 @@ Packet *LoRaTDMAMac::getCurrentTransmission()
     ASSERT(currentTxFrame != nullptr);
     return currentTxFrame;
 }
-
-bool LoRaTDMAMac::isReceiving()
-{
-    return radio->getReceptionState() == IRadio::RECEPTION_STATE_RECEIVING;
-}
-
 
 // bool LoRaTDMAMac::isForUs(const Ptr<const LoRaTDMAMacFrame> &frame)
 // {

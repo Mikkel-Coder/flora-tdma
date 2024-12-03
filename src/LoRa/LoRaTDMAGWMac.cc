@@ -44,7 +44,7 @@ void LoRaTDMAGWMac::initialize(int stage)
         startBroadcast = new cMessage("startBroadcast");
         endBroadcast = new cMessage("endBroadcast");
 
-        timeslots = new std::vector<MacAddress>(300);
+        timeslots = new std::vector<MacAddress>(50);
 
         if (!strcmp(addressString, "auto")) {
             // assign automatic address
@@ -170,13 +170,13 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             Packet *pkt = new Packet("Gateway Broadcast");
             IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
             frame->setTransmitterAddress(address);
-            frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()));
+            frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()) + ClockTime(17.440768)); // FIXME: Calculated the extra time
             createTimeslots();
             std::vector<MacAddress>& vecRef = *timeslots;
             for (size_t i = 0; i < timeslots->size(); i++) {
                 frame->setTimeslots(i, vecRef[i]);
             }
-            frame->setChunkLength(B(8)); // FIXME: this is low now, find real length later
+            frame->setChunkLength(B(379)); // Calculated for now
             pkt->insertAtFront(frame);
             pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
 

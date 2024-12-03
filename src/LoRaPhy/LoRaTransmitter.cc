@@ -65,7 +65,7 @@ const ITransmission *LoRaTransmitter::createTransmission(const IRadio *transmitt
     simtime_t Tpreamble = (nPreamble + 4.25) * Tsym / 1000;
 
     int payloadBytes = 0;
-    if(iAmGateway) payloadBytes = 15;
+    if(iAmGateway) payloadBytes = 379; // Calculated for now
     else payloadBytes = 20;
     int payloadSymbNb = 8;
     payloadSymbNb += std::ceil((8*payloadBytes - 4*frame->getSpreadFactor() + 28 + 16 - 20*0)/(4*(frame->getSpreadFactor()-2*0)))*(frame->getCodeRendundance() + 4);

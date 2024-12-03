@@ -74,6 +74,9 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     cMessage *endTransmission = nullptr;
     cMessage *endReception = nullptr;
 
+    cMessage *mediumStateChange = nullptr;
+    cMessage *endRXEarly = nullptr;
+
     /** @name Statistics */
     //@{
     long numSent;
@@ -134,7 +137,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     // virtual void finishCurrentTransmission();
     virtual Packet *getCurrentTransmission();
 
-    virtual bool isReceiving();
+    // virtual bool isReceiving();
     // virtual bool isForUs(const Ptr<const LoRaTDMAMacFrame> &msg);
 
     virtual void processUpperPacket();
