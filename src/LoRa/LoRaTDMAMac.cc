@@ -152,7 +152,13 @@ void LoRaTDMAMac::handleSelfMessage(cMessage *msg)
 
 void LoRaTDMAMac::handleUpperPacket(Packet *packet)
 {
-    // MAGIC
+    packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
+    EV << "frame " << packet << " received from higher layer" << endl;
+    Packet *pktEncap = encapsulate(packet);
+    if (currentTxFrame != nullptr) {
+        throw cRuntimeError("Already have a current txFrame");
+    }
+    currentTxFrame = pktEncap;
 }
 
 void LoRaTDMAMac::handleLowerPacket(Packet *msg)
@@ -274,16 +280,14 @@ void LoRaTDMAMac::handleState(cMessage *msg)
                 return;
             }
 
-            // TODO: Should we return and have another function do the sending?, or encapsulate sending in another function
-            
-            // TODO: make the packet?
-
             radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
 
             EV_DETAIL << "transition: SLEEP -> TRANSMIT" << endl;
             macState = TRANSMIT;
 
-            // TODO: send
+            processUpperPacket();
+            ASSERT(currentTxFrame);
+            sendDown(currentTxFrame);
 
         } else if (CHECKCLEV(msgclev, startRXSlot)) { // The gateways broadcast slot (receive slot) has begun
             radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
@@ -349,13 +353,17 @@ void LoRaTDMAMac::receiveSignal(cComponent *source, simsignal_t signalID, intval
 
 Packet *LoRaTDMAMac::encapsulate(Packet *msg)
 {
-    auto frame = makeShared<LoRaTDMAMacFrame>();
-    frame->setChunkLength(B(headerLength));
-    msg->setArrival(msg->getArrivalModuleId(), msg->getArrivalGateId());
+    IntrusivePtr<LoRaTDMAMacFrame> frame = makeShared<LoRaTDMAMacFrame>();
+    frame->setChunkLength(b(10));
 
-    /* For TDMA it would perhaps be better to have this in the LoRaPhy preamble,
-     * but i do not think it is possible
-     */
+    auto tag = msg->addTagIfAbsent<LoRaTag>();
+    tag->setPower(mW(math::dBmW2mW(14)));
+    tag->setCenterFrequency(MHz(868));
+    tag->setBandwidth(kHz(125));
+    tag->setCodeRendundance(4);
+    tag->setSpreadFactor(12);
+    tag->setUseHeader(true);
+
     frame->setTransmitterAddress(address);
     msg->insertAtFront(frame);
     return msg;
