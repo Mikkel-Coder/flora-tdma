@@ -97,7 +97,7 @@ void LoRaGWRadio::handleUpperPacket(Packet *packet)
     auto preamble = makeShared<LoRaPhyPreamble>();
 
     // TODO: fix later
-    preamble->setBandwidth(Hz(125));
+    preamble->setBandwidth(kHz(125));
     preamble->setCenterFrequency(MHz(868));
     preamble->setCodeRendundance(4);
     preamble->setPower(mW(math::dBmW2mW(14)));
