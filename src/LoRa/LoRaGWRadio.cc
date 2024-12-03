@@ -98,16 +98,16 @@ void LoRaGWRadio::handleUpperPacket(Packet *packet)
 
     // TODO: fix later
     preamble->setBandwidth(Hz(125));
-    preamble->setCenterFrequency(MHz(863));
+    preamble->setCenterFrequency(MHz(868));
     preamble->setCodeRendundance(4);
-    preamble->setPower(mW(10));
+    preamble->setPower(mW(math::dBmW2mW(14)));
     preamble->setSpreadFactor(12);
     preamble->setUseHeader(true);
     preamble->setReceiverAddress(MacAddress::BROADCAST_ADDRESS);
 
     /* Keep track of the power required to transmit the packet */
     auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();
-    // signalPowerReq->setPower(mW(frame->getLoRaTP()));
+    signalPowerReq->setPower(mW(math::dBmW2mW(14)));
 
     preamble->setChunkLength(b(16)); /* This is not important because the preamble is 8+4.25 symbols */
     packet->insertAtFront(preamble); /* Be sure to place the preamble at front */

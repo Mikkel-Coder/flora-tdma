@@ -143,26 +143,6 @@ void LoRaTDMAGWMac::createTimeslots() {
     ASSERT(timeslots->size() == 300);
 }
 
-IntrusivePtr<LoRaTDMAGWFrame> LoRaTDMAGWMac::createFrame() {
-    IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
-    
-    simtime_t syncTime = simTime(); // TODO: calculate offset from transmission time
-
-    frame->setTransmitterAddress(address);
-    frame->setSyncTime(SIMTIME_AS_CLOCKTIME(syncTime));
-
-    createTimeslots();
-
-    std::vector<MacAddress>& vecRef = *timeslots;
-    for (size_t i = 0; i < timeslots->size(); i++) {
-        frame->setTimeslots(i, vecRef[i]);
-    }
-
-    EV_DETAIL << "Created " << frame << endl;
-
-    return frame;
-} 
-
 void LoRaTDMAGWMac::handleState(cMessage *msg)
 {
     switch (macState)
@@ -187,9 +167,16 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             EV_DETAIL << "transition: RECEIVE -> TRANSMIT" << endl;
             macState = TRANSMIT;
 
-            Packet *pkt = new Packet("Gateway Broadcast", 0);
-            IntrusivePtr<LoRaTDMAGWFrame> frame = createFrame();
-            frame->setChunkLength(b(1)); // FIXME: this is low now, find real length later
+            Packet *pkt = new Packet("Gateway Broadcast");
+            IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
+            frame->setTransmitterAddress(address);
+            frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()));
+            createTimeslots();
+            std::vector<MacAddress>& vecRef = *timeslots;
+            for (size_t i = 0; i < timeslots->size(); i++) {
+                frame->setTimeslots(i, vecRef[i]);
+            }
+            frame->setChunkLength(B(8)); // FIXME: this is low now, find real length later
             pkt->insertAtFront(frame);
 
             sendDown(pkt);

@@ -78,7 +78,6 @@ protected:
     IRadio::TransmissionState transmissionState = IRadio::TRANSMISSION_STATE_UNDEFINED;
 
     virtual void createTimeslots();
-    virtual IntrusivePtr<LoRaTDMAGWFrame> createFrame();
     virtual void handleState(cMessage *msg);
 
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details) override;
