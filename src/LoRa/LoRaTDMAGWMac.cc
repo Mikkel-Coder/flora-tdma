@@ -178,6 +178,7 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             }
             frame->setChunkLength(B(8)); // FIXME: this is low now, find real length later
             pkt->insertAtFront(frame);
+            pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
 
             sendDown(pkt);
         }
