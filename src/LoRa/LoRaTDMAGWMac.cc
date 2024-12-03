@@ -157,6 +157,13 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
             EV_DETAIL << "transition: TRANSMIT -> RECEIVE" << endl;
             macState = RECEIVE;
+            // Schedule next broadcast
+            simtime_t txStartTime = simTime() + rxslotDuration*numOfTimeslots + broadcastGuard;
+            simtime_t txEndTime = txStartTime + txslotDuration;
+            EV << "Full time offset for start transmit is: " << txStartTime << endl;
+            EV << "Full time offset for end transmit is: " << txEndTime << endl;
+            scheduleAt(txStartTime, startBroadcast);
+            scheduleAt(txEndTime, endBroadcast);
         }
         break;
     
