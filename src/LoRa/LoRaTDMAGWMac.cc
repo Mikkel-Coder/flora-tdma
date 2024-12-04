@@ -166,7 +166,7 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
     switch (macState)
     {
     case INIT:
-        EV_DETAIL << "Mac Initialized, transition: INIT -> SLEEP" << endl;
+        EV_DETAIL << "Mac Initialized, transition: INIT -> RECEIVE" << endl;
         macState = RECEIVE;
         break;
 
