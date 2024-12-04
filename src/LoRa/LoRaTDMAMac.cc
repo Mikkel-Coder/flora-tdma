@@ -37,6 +37,7 @@ LoRaTDMAMac::~LoRaTDMAMac()
     clock->cancelClockEvent(endRXSlot);
     clock->cancelClockEvent(startTXSlot);
     clock->cancelClockEvent(endTXSlot);
+    clock->cancelClockEvent(startTransmit);
     cancelAndDelete(endTransmission);
     cancelAndDelete(endReception);
 
@@ -69,6 +70,7 @@ void LoRaTDMAMac::initialize(int stage)
         txslotDuration = par("txslotDuration");
         rxslotDuration = par("rxslotDuration");
         broadcastGuard = par("broadcastGuard");
+        startTransmitOffset = par("startTransmitOffset");
         firstRxSlot = par("firstRxSlot");
 
         // subscribe for the information of the carrier sense
@@ -86,6 +88,7 @@ void LoRaTDMAMac::initialize(int stage)
         endRXSlot = new ClockEvent("endRXSlot");
         startTXSlot = new ClockEvent("startTXSlot");
         endTXSlot = new ClockEvent("endTXSlot");
+        startTransmit = new ClockEvent("startTransmit");
         endTransmission = new cMessage("endTransmission");
         endReception = new cMessage("endReception");
         mediumStateChange = new cMessage("mediumStateChange");
@@ -196,21 +199,23 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
          * 2. The broadcast guard interval
          * 3. The end of the receive slot (as given by the arrival clock of the endRXSlot)
          */
-        clocktime_t txStartTime = txslotDuration*timeslotIdx + broadcastGuard + endRXSlot->getArrivalClockTime();
-        EV << "Full clock offset for start transmit is " << txStartTime << endl;
-        EV << "Full clock offset for end transmit is " << txStartTime + txslotDuration << endl;
-        clock->scheduleClockEventAt(txStartTime, startTXSlot); // Schedule our transmission slot
-        clock->scheduleClockEventAt(txStartTime + txslotDuration, endTXSlot); // Schedule the end of our transmission slot
+        clocktime_t txSlotStartTime = txslotDuration*timeslotIdx + broadcastGuard + endRXSlot->getArrivalClockTime();
+        EV << "TX slot START time set on the clock: " << txSlotStartTime << endl;
+        EV << "TX slot END time set on the clock: " << txSlotStartTime + txslotDuration << endl;
+        EV << "Start of us transmitting set on the clock: " << txSlotStartTime + startTransmitOffset << endl;
+        clock->scheduleClockEventAt(txSlotStartTime, startTXSlot); // Schedule our transmission slot
+        clock->scheduleClockEventAt(txSlotStartTime + txslotDuration, endTXSlot); // Schedule the end of our transmission slot
+        clock->scheduleClockEventAt(txSlotStartTime + startTransmitOffset, startTransmit); // The actual point that we start to transmit
 
         /* Calculate the next receive slot, this is done in similar fashions as the transmit slot
          * But we take the total size of all transmissions in this "round"
          */
-        clocktime_t rxStartTime = txslotDuration*timeslotarraysize + broadcastGuard + endRXSlot->getArrivalClockTime();
-        EV << "Full clock offset for start receive is " << rxStartTime << endl;
-        EV << "Full clock offset for end receive is " << rxStartTime + rxslotDuration << endl;
+        clocktime_t rxSlotStartTime = txslotDuration*timeslotarraysize + broadcastGuard + endRXSlot->getArrivalClockTime();
+        EV << "RX slot START time set on the clock: " << rxSlotStartTime << endl;
+        EV << "RX slot END time set on the clock: " << rxSlotStartTime + rxslotDuration << endl;
         clock->cancelClockEvent(endRXSlot); // Cancel the event before rescheduling
-        clock->scheduleClockEventAt(rxStartTime, startRXSlot); // Schedule the next receive slot to listen to the gateway
-        clock->scheduleClockEventAt(rxStartTime + rxslotDuration, endRXSlot); // And the end
+        clock->scheduleClockEventAt(rxSlotStartTime, startRXSlot); // Schedule the next receive slot to listen to the gateway
+        clock->scheduleClockEventAt(rxSlotStartTime + rxslotDuration, endRXSlot); // And the end
         handleState(endRXEarly);
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
@@ -258,7 +263,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
 {
     auto msgclev = dynamic_cast<ClockEvent *>(msg);
     if(msgclev) {
-        EV << "Arrival clock time for message: " << msgclev->getArrivalClockTime() << endl;
+        EV << "Arrival clock time for message: " << msgclev->getArrivalClockTime() << ", simtime for message: " << msgclev->getArrivalTime() << endl;
     }
 
     switch (macState)
@@ -285,10 +290,6 @@ void LoRaTDMAMac::handleState(cMessage *msg)
             EV_DETAIL << "transition: SLEEP -> TRANSMIT" << endl;
             macState = TRANSMIT;
 
-            processUpperPacket();
-            ASSERT(currentTxFrame);
-            sendDown(currentTxFrame);
-
         } else if (CHECKCLEV(msgclev, startRXSlot)) { // The gateways broadcast slot (receive slot) has begun
             radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
             EV_DETAIL << "transition: SLEEP -> LISTEN" << endl;
@@ -297,7 +298,12 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         break;
 
     case TRANSMIT:
-        if (CHECKCLEV(msgclev, endTXSlot)) { // End of the transmission slot
+        if (CHECKCLEV(msgclev, startTransmit)) { // Actually send now
+            EV << "Starting to transmit" << endl;
+            processUpperPacket();
+            ASSERT(currentTxFrame);
+            sendDown(currentTxFrame);
+        } else if (CHECKCLEV(msgclev, endTXSlot)) { // End of the transmission slot
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: TRANSMIT -> SLEEP" << endl;
             macState = SLEEP;

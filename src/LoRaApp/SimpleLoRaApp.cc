@@ -119,7 +119,7 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
             pkt->insertAtFront(payload);
             send(pkt, "socketOut");
 
-            timeToNextPacket = SimTime(100);
+            timeToNextPacket = SimTime(300);
             sendMeasurements = new cMessage("sendMeasurements");
             scheduleAt(simTime() + timeToNextPacket, sendMeasurements);
         }

@@ -37,6 +37,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     clocktime_t txslotDuration;
     clocktime_t rxslotDuration;
     clocktime_t broadcastGuard;
+    clocktime_t startTransmitOffset;
     clocktime_t firstRxSlot;
     double bitrate = NaN;
     int headerLength = -1;
@@ -69,6 +70,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     ClockEvent *endRXSlot = nullptr;
     ClockEvent *startTXSlot = nullptr;
     ClockEvent *endTXSlot = nullptr;
+    ClockEvent *startTransmit = nullptr;
 
     /** @name State transition messages */
     cMessage *endTransmission = nullptr;

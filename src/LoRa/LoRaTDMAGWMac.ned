@@ -41,7 +41,8 @@ simple LoRaTDMAGWMac extends MacProtocolBase like IMacProtocol
         double txslotDuration @unit(s) = default(20s);
         double rxslotDuration @unit(s) = default(12s);
         double broadcastGuard @unit(s) = default(1s);
-        double firstTxSlot @unit(s) = default(1s);
+        double startTransmitOffset @unit(s) = default(0.2s);
+        double firstTXSlot @unit(s) = default(1s);
 
         @class(LoRaTDMAGWMac);
 

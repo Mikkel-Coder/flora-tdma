@@ -26,6 +26,7 @@ module LoRaTDMAMac extends CsmaCaMac
         double txslotDuration @unit(s) = default(12s);
         double rxslotDuration @unit(s) = default(20s);
         double broadcastGuard @unit(s) = default(1s);
+        double startTransmitOffset @unit(s) = default(0.2s);
         double firstRxSlot @unit(s) = default(1s);
         string clockModule = default("^.clock");
         @class(LoRaTDMAMac);

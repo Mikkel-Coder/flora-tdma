@@ -48,10 +48,12 @@ public:
     simtime_t txslotDuration;
     simtime_t rxslotDuration;
     simtime_t broadcastGuard;
-    simtime_t firstTxSlot;
+    simtime_t startTransmitOffset;
+    simtime_t firstTXSlot;
 
-    cMessage *startBroadcast;
-    cMessage *endBroadcast;
+    cMessage *startTXSlot;
+    cMessage *endTXSlot;
+    cMessage *startTransmit;
 
     MacAddress clients[1000];
     std::vector<MacAddress> *timeslots;

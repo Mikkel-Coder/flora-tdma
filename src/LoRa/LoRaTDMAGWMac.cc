@@ -39,10 +39,12 @@ void LoRaTDMAGWMac::initialize(int stage)
         txslotDuration = par("txslotDuration");
         rxslotDuration = par("rxslotDuration");
         broadcastGuard = par("broadcastGuard");
-        firstTxSlot = par("firstTxSlot");
+        startTransmitOffset = par("startTransmitOffset");
+        firstTXSlot = par("firstTXSlot");
 
-        startBroadcast = new cMessage("startBroadcast");
-        endBroadcast = new cMessage("endBroadcast");
+        startTXSlot = new cMessage("startTXSlot");
+        endTXSlot = new cMessage("endTXSlot");
+        startTransmit = new cMessage("startTransmit");
 
         timeslots = new std::vector<MacAddress>(50);
 
@@ -58,8 +60,9 @@ void LoRaTDMAGWMac::initialize(int stage)
         // state variables
         macState = INIT;
         
-        scheduleAt(firstTxSlot, startBroadcast);
-        scheduleAt(firstTxSlot + txslotDuration, endBroadcast);
+        scheduleAt(firstTXSlot, startTXSlot);
+        scheduleAt(firstTXSlot + txslotDuration, endTXSlot);
+        scheduleAt(firstTXSlot + startTransmitOffset, startTransmit);
         handleState(nullptr);
     }
     else if (stage == INITSTAGE_LINK_LAYER) {
@@ -120,13 +123,21 @@ void LoRaTDMAGWMac::handleSelfMessage(cMessage *msg)
 
 void LoRaTDMAGWMac::handleLowerMessage(cMessage *msg)
 {
-    // Make the message a packet and get the Preamble and macframe from it
-    auto pkt = check_and_cast<Packet *>(msg);
-    auto header = pkt->popAtFront<LoRaPhyPreamble>();
-    const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
-    EV << "Received packet: " << pkt << endl;
-    EV << "HEADER: " << header << endl;
-    EV << "MAC FRAME: " << frame << endl;
+    if (macState == RECEIVE)
+    {
+        // Make the message a packet and get the Preamble and macframe from it
+        auto pkt = check_and_cast<Packet *>(msg);
+        auto header = pkt->popAtFront<LoRaPhyPreamble>();
+        const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
+        EV << "Received packet: " << pkt << endl;
+        EV << "HEADER: " << header << endl;
+        EV << "MAC FRAME: " << frame << endl;   
+    } else {
+        EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
+        EV_DEBUG << "macState: " << macState << endl;
+        delete msg;
+    }
+    
 }
 
 void LoRaTDMAGWMac::createTimeslots() {
@@ -139,7 +150,14 @@ void LoRaTDMAGWMac::createTimeslots() {
         timeslots->push_back(clients[i]);
     }
 
-    EV_DETAIL << "Generated timeslots: " << timeslots << endl;
+
+    EV_DETAIL << "Generated timeslots" << endl;
+    std::vector<MacAddress>& vecRef = *timeslots;
+    for (size_t i = 0; i < timeslots->size(); i++)
+    {
+        EV_DEBUG << "timeslot[" << i << "] = " << vecRef[i] << endl;
+    }
+    
     ASSERT(timeslots->size() == 300);
 }
 
@@ -153,28 +171,8 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
         break;
 
     case TRANSMIT:
-        if (msg == endBroadcast) {
-            radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
-            EV_DETAIL << "transition: TRANSMIT -> RECEIVE" << endl;
-            macState = RECEIVE;
-            // Schedule next broadcast
-            simtime_t txStartTime = simTime() + rxslotDuration*numOfTimeslots + broadcastGuard;
-            simtime_t txEndTime = txStartTime + txslotDuration;
-            EV << "Full time offset for start transmit is: " << txStartTime << endl;
-            EV << "Full time offset for end transmit is: " << txEndTime << endl;
-            scheduleAt(txStartTime, startBroadcast);
-            scheduleAt(txEndTime, endBroadcast);
-        }
-        break;
-    
-    case RECEIVE:
-        if (msg == startBroadcast)
-        {
-            radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
-            EV_DETAIL << "transition: RECEIVE -> TRANSMIT" << endl;
-            macState = TRANSMIT;
-
-            Packet *pkt = new Packet("Gateway Broadcast");
+        if (msg == startTransmit) {
+            Packet *pkt = new Packet("GatewayBroadcast");
             IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
             frame->setTransmitterAddress(address);
             frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()) + ClockTime(17.440768)); // FIXME: Calculated the extra time
@@ -188,8 +186,29 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
 
             sendDown(pkt);
+        } else if (msg == endTXSlot) {
+            radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
+            EV_DETAIL << "transition: TRANSMIT -> RECEIVE" << endl;
+            macState = RECEIVE;
+            // Schedule next broadcast
+            simtime_t txStartTime = simTime() + rxslotDuration*numOfTimeslots + broadcastGuard;
+            simtime_t txEndTime = txStartTime + txslotDuration;
+            EV << "TX slot START time set in simtime: " << txStartTime << endl;
+            EV << "TX slot END time set in simtime: " << txEndTime << endl;
+            EV << "Start of us transmitting set in simtime: " << txStartTime + startTransmitOffset << endl;
+            scheduleAt(txStartTime, startTXSlot);
+            scheduleAt(txEndTime, endTXSlot);
+            scheduleAt(txStartTime + startTransmitOffset, startTransmit);
         }
-        
+        break;
+    
+    case RECEIVE:
+        if (msg == startTXSlot)
+        {
+            radio->setRadioMode(IRadio::RADIO_MODE_TRANSMITTER);
+            EV_DETAIL << "transition: RECEIVE -> TRANSMIT" << endl;
+            macState = TRANSMIT;
+        }
         break;
     
     default:
