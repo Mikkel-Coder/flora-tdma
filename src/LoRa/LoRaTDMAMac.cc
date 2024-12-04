@@ -301,6 +301,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: TRANSMIT -> SLEEP" << endl;
             macState = SLEEP;
+            currentTxFrame = nullptr;
         }
         break;
 
