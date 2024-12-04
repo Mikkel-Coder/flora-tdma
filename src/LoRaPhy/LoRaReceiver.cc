@@ -90,21 +90,22 @@ bool LoRaReceiver::computeIsReceptionAttempted(const IListening *listening, cons
     {
         auto packet = reception->getTransmission()->getPacket();
         const auto &chunk = packet->peekAtFront<FieldsChunk>();
-        auto loraMac = dynamicPtrCast<const LoRaMacFrame>(chunk);
+        auto loraMac = dynamicPtrCast<const LoRaTDMAMacFrame>(chunk);
         auto loraPreamble = dynamicPtrCast<const LoRaPhyPreamble>(chunk);
         MacAddress rec;
         if (loraPreamble)
             rec = loraPreamble->getReceiverAddress();
-        else if (loraMac)
-            rec = loraMac->getReceiverAddress();
+        // TODO: fix
+        // else if (loraMac)
+            // rec = loraMac->getReceiverAddress();
 
         if (iAmGateway == false) {
-            auto *macLayer = check_and_cast<LoRaMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));
+            auto *macLayer = check_and_cast<LoRaTDMAMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));
             if (rec == macLayer->getAddress()) {
                 const_cast<LoRaReceiver* >(this)->numCollisions++;
             }
         } else {
-            auto *gwMacLayer = check_and_cast<LoRaGWMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));
+            auto *gwMacLayer = check_and_cast<LoRaTDMAGWMac *>(getParentModule()->getParentModule()->getSubmodule("mac"));
             EV << "GW: Extracted macFrame = " << rec << ", node address = " << gwMacLayer->getAddress() << std::endl;
             if (rec == MacAddress::BROADCAST_ADDRESS) {
                 const_cast<LoRaReceiver* >(this)->numCollisions++;

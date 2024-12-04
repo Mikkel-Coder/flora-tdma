@@ -93,20 +93,21 @@ void LoRaGWRadio::handleUpperPacket(Packet *packet)
     EV << packet->getDetailStringRepresentation(evFlags) << endl;
 
     /* Convert the upper layer packet to a frame and set the right parameters */
-    const auto &frame = packet->peekAtFront<LoRaMacFrame>();
+    const auto &frame = packet->peekAtFront<LoRaTDMAGWFrame>();
     auto preamble = makeShared<LoRaPhyPreamble>();
 
-    preamble->setBandwidth(frame->getLoRaBW());
-    preamble->setCenterFrequency(frame->getLoRaCF());
-    preamble->setCodeRendundance(frame->getLoRaCR());
-    preamble->setPower(mW(frame->getLoRaTP()));
-    preamble->setSpreadFactor(frame->getLoRaSF());
-    preamble->setUseHeader(frame->getLoRaUseHeader());
-    preamble->setReceiverAddress(frame->getReceiverAddress());
+    // TODO: fix later
+    preamble->setBandwidth(kHz(125));
+    preamble->setCenterFrequency(MHz(868));
+    preamble->setCodeRendundance(4);
+    preamble->setPower(mW(math::dBmW2mW(14)));
+    preamble->setSpreadFactor(12);
+    preamble->setUseHeader(true);
+    preamble->setReceiverAddress(MacAddress::BROADCAST_ADDRESS);
 
     /* Keep track of the power required to transmit the packet */
     auto signalPowerReq = packet->addTagIfAbsent<SignalPowerReq>();
-    signalPowerReq->setPower(mW(frame->getLoRaTP()));
+    signalPowerReq->setPower(mW(math::dBmW2mW(14)));
 
     preamble->setChunkLength(b(16)); /* This is not important because the preamble is 8+4.25 symbols */
     packet->insertAtFront(preamble); /* Be sure to place the preamble at front */

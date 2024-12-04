@@ -23,8 +23,7 @@
 #include <algorithm>
 #include "inet/common/INETDefs.h"
 
-#include "../LoRa/LoRaMacControlInfo_m.h"
-#include "../LoRa/LoRaMacFrame_m.h"
+#include "../LoRa/LoRaTDMAMacFrame_m.h"
 #include "inet/applications/base/ApplicationBase.h"
 #include "inet/transportlayer/contract/udp/UdpSocket.h"
 #include "../LoRaApp/LoRaAppPacket_m.h"
@@ -84,7 +83,7 @@ class NetworkServerApp : public cSimpleModule, cListener
     void startUDP();
     void setSocketOptions();
     virtual int numInitStages() const override { return NUM_INIT_STAGES; }
-    bool isPacketProcessed(const Ptr<const LoRaMacFrame> &);
+    bool isPacketProcessed(const Ptr<const LoRaTDMAMacFrame> &);
     void updateKnownNodes(Packet* pkt);
     void addPktToProcessingTable(Packet* pkt);
     void processScheduledPacket(cMessage* selfMsg);

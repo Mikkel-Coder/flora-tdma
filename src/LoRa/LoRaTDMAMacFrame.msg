@@ -13,28 +13,28 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-//
-// TODO This is our TDMA msg thing for omnet
-//
-
 import inet.common.INETDefs;
 import inet.common.Units;
 import inet.linklayer.common.MacAddress;
-
-namespace flora_tdma;
+import inet.common.packet.chunk.Chunk;
 
 cplusplus {{
 using namespace inet;
 }}
 
-class LoRaMacControlInfo {
-    inet::MacAddress src;  // src DevAddr address (can be left empty when sending)
-    inet::MacAddress dest; // dest DevAddr address
+namespace flora_tdma;
 
-    double LoRaTP;
-    inet::Hz LoRaCF;
-    int LoRaSF;
-    inet::Hz LoRaBW;
-    int LoRaCR;
-    bool LoRaUseHeader;
+class LoRaTDMAMacFrame extends inet::FieldsChunk {
+    inet::MacAddress transmitterAddress;
+    // inet::MacAddress receiverAddress;
+
+    // int sequenceNumber; // I dot not think that this is needed
+    // double LoRaTP;
+    // inet::Hz LoRaCF;
+    // int LoRaSF;
+    // inet::Hz LoRaBW;
+    // int LoRaCR;
+    // bool LoRaUseHeader;
+    // double RSSI;
+    // double SNIR;
 }

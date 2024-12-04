@@ -44,10 +44,7 @@ void SimpleLoRaApp::initialize(int stage)
         if (!isOperational)
             throw cRuntimeError("This module doesn't support starting in node DOWN state");
         /* This do loop does not make any sense. It does not seem likely that the timeToFirstPacket will change */
-        do {
-            timeToFirstPacket = par("timeToFirstPacket");
-            EV << "I have generated this time: " << timeToFirstPacket << endl;
-        } while(timeToFirstPacket <= 5);
+        timeToFirstPacket = SimTime(1);
 
         //timeToFirstPacket = par("timeToFirstPacket");
         sendMeasurements = new cMessage("sendMeasurements");
@@ -106,27 +103,25 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
     if (msg->isSelfMessage()) {
         if (msg == sendMeasurements)
         {
-            sendJoinRequest();
-            if (simTime() >= getSimulation()->getWarmupPeriod())
-                sentPackets++;
+            // sendJoinRequest();
+            // if (simTime() >= getSimulation()->getWarmupPeriod())
+                // sentPackets++;
             delete msg;
-            if(numberOfPacketsToSend == 0 || sentPackets < numberOfPacketsToSend)
+
+            Packet *pkt = new Packet("DataFrame");
+            IntrusivePtr<LoRaAppRandomData> payload = makeShared<LoRaAppRandomData>();
+            char text[20] = "This is data, okay.";
+            for (size_t i = 0; i < 20; i++)
             {
-                double time;
-                int loRaSF = getSF();
-                if(loRaSF == 7) time = 7.808;
-                if(loRaSF == 8) time = 13.9776;
-                if(loRaSF == 9) time = 24.6784;
-                if(loRaSF == 10) time = 49.3568;
-                if(loRaSF == 11) time = 85.6064;
-                if(loRaSF == 12) time = 171.2128;
-                do {
-                    timeToNextPacket = par("timeToNextPacket");
-                    //if(timeToNextPacket < 3) error("Time to next packet must be grater than 3");
-                } while(timeToNextPacket <= time);
-                sendMeasurements = new cMessage("sendMeasurements");
-                scheduleAt(simTime() + timeToNextPacket, sendMeasurements);
+                payload->setText(i, text[i]);
             }
+            payload->setChunkLength(B(20));
+            pkt->insertAtFront(payload);
+            send(pkt, "socketOut");
+
+            timeToNextPacket = SimTime(300);
+            sendMeasurements = new cMessage("sendMeasurements");
+            scheduleAt(simTime() + timeToNextPacket, sendMeasurements);
         }
     }
     else

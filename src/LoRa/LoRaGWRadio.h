@@ -21,7 +21,7 @@
 #include "LoRaPhy/LoRaReceiver.h"
 #include "LoRaPhy/LoRaTransmission.h"
 #include "LoRaPhy/LoRaReception.h"
-#include "LoRaMacFrame_m.h"
+#include "LoRaTDMAMacFrame_m.h"
 #include "inet/physicallayer/wireless/common//medium/RadioMedium.h"
 #include "LoRaPhy/LoRaMedium.h"
 #include "inet/common/LayeredProtocolBase.h"

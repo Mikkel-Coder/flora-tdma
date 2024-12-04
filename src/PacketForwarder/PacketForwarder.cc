@@ -74,14 +74,15 @@ void PacketForwarder::handleMessage(cMessage *msg)
     if (msg->arrivedOn("lowerLayerIn")) {
         EV << "Received LoRaMAC frame" << endl;
         auto pkt = check_and_cast<Packet*>(msg);
-        const auto &frame = pkt->peekAtFront<LoRaMacFrame>();
-        if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
-            processLoraMACPacket(pkt);
+        const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
+        // TODO: fix
+        // if(frame->getReceiverAddress() == MacAddress::BROADCAST_ADDRESS)
+        //     processLoraMACPacket(pkt);
     } else if (msg->arrivedOn("socketIn")) {
         // FIXME : debug for now to see if LoRaMAC frame received correctly from network server
         EV << "Received UDP packet" << endl;
         auto pkt = check_and_cast<Packet*>(msg);
-        const auto &frame = pkt->peekAtFront<LoRaMacFrame>();
+        const auto &frame = pkt->peekAtFront<LoRaTDMAMacFrame>();
 
         if (frame == nullptr)
             throw cRuntimeError("Packet type error");
@@ -97,7 +98,7 @@ void PacketForwarder::processLoraMACPacket(Packet *pk)
     if (simTime() >= getSimulation()->getWarmupPeriod())
         counterOfReceivedPackets++;
     pk->trimFront();
-    auto frame = pk->removeAtFront<LoRaMacFrame>();
+    auto frame = pk->removeAtFront<LoRaTDMAMacFrame>();
 
     auto snirInd = pk->getTag<SnirInd>();
 
@@ -105,8 +106,9 @@ void PacketForwarder::processLoraMACPacket(Packet *pk)
 
     W w_rssi = signalPowerInd->getPower();
     double rssi = w_rssi.get()*1000;
-    frame->setRSSI(math::mW2dBmW(rssi));
-    frame->setSNIR(snirInd->getMinimumSnir());
+    // TODO: fix
+    // frame->setRSSI(math::mW2dBmW(rssi));
+    // frame->setSNIR(snirInd->getMinimumSnir());
     pk->insertAtFront(frame);
 
     EV << frame->getTransmitterAddress() << endl;

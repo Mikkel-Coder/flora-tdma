@@ -13,21 +13,21 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-package flora_tdma.LoRa;
+import inet.common.INETDefs;
+import inet.common.Units;
+import inet.linklayer.common.MacAddress;
+import inet.common.packet.chunk.Chunk;
+import inet.clock.contract.ClockTime;
 
-import inet.linklayer.contract.IWirelessInterface;
-import inet.linklayer.common.WirelessInterface;
+cplusplus {{
+using namespace inet;
+}}
 
-import flora_tdma.LoRaPhy.LoRaMedium;
+namespace flora_tdma;
 
-module LoRaGWNic extends WirelessInterface
-{
-    parameters:
-        @display("i=block/ifcard");
-        *.interfaceTableModule = default(absPath(this.interfaceTableModule));        radio.typename = default("LoRaGWRadio");
-        radio.antenna.mobilityModule = "^.^.^.mobility";
-        radio.transmitter.typename = "LoRaTransmitter";
-        radio.transmitter.headerLength = 0B;
-        radio.receiver.typename = "LoRaReceiver";
-        mac.typename = "LoRaTDMAGWMac";
+class LoRaTDMAGWFrame extends inet::FieldsChunk {
+    inet::MacAddress transmitterAddress;
+    inet::clocktime_t syncTime;
+    // Order of timeslots matter, the slots will happen in the order of this array
+    inet::MacAddress timeslots[300];
 }

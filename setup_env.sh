@@ -15,15 +15,21 @@ exit 1
 function rebuild_inet() {
 	OLDPWD=$PWD && \
 	cd $PWD/../inet4.4 && \
+	make makefiles && \
 	make clean && \
+	echo -e "\n\n[+] RELEASE MODE:" && \
 	make MODE=release -j${CORES} && \
+	echo -e "\n\n[+] DEBUG MODE:" && \
 	make MODE=debug -j${CORES} && \
 	cd $OLDPWD
 }
 
 function rebuild_flora() {
+	make makefiles && \
 	make clean && \
+	echo -e "\n\n[+] RELEASE MODE:" && \
 	make MODE=release -j${CORES} && \
+	echo -e "\n\n[+] DEBUG MODE:" && \
 	make MODE=debug -j${CORES}
 }
 

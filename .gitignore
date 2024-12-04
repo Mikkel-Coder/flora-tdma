@@ -28,6 +28,9 @@ src/Makefile
 
 /out
 
+# Ignore logs
+*.log
+
 .settings/*
 simulations/**/results
 simulations/**/.tkenvrc
