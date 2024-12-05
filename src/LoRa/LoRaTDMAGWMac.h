@@ -59,7 +59,7 @@ public:
 
     MacAddress clients[MAX_MAC_ADDR_GW_FRAME] = { inet::MacAddress("00:00:00:00:00:00") };
     std::vector<MacAddress> *timeslots;
-    MacAddress *nextNodeInTimeSlotQueue;
+    size_t nextNodeInTimeSlotQueue;
 
     int usedTimeSlots;
 

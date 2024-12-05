@@ -180,7 +180,7 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
         clock->setClockTime(synctime);
 
         // Check if we have a time slot
-        // TODO: Optimize for more and more nodes
+        // TODO: Check and save what receive windows we have been given and use them
         int timeslotIdx = -1;      
         auto timeslotarraysize = frame->getUsedTimeSlots();
         EV << "The broadcasted timeslot size is: " << timeslotarraysize << endl;
@@ -191,6 +191,9 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
             {
                 // We found ourself. Note the index. That is the time_index we can transmit
                 timeslotIdx = i;
+
+                // TODO: Instead of beak continue to search as we might have been given another
+                // (or more than one) timeslot that we can transmit in
                 break;
             }
         }

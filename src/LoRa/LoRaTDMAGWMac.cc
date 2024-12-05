@@ -93,7 +93,7 @@ void LoRaTDMAGWMac::initialize(int stage)
         numberOfNodes = i;
         EV << "Number of nodes in this simulation is: " << numberOfNodes << endl;
         radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
-        nextNodeInTimeSlotQueue = clients;
+        nextNodeInTimeSlotQueue = 0;
     }
 }
 
@@ -148,27 +148,17 @@ void LoRaTDMAGWMac::createTimeslots() {
 
     // TODO: make this not a loop and something more intelligent
     // Clients 300+ do not have timeslots. They should have, now define by MAX_MAC_ADDR_GW_FRAME
-    for (size_t i = 0; i < numberOfNodes; i++) {
-        // Get the current node pointer + i % 900
-
-        // Are we too many?
-        if (i >= 900) {
-            nextNodeInTimeSlotQueue;
-            // They they are the first in the next round
-        }
-
-
-        // Check if we can loop again
-
-
-
-        size_t nodeIndex = i + (i % numberOfNodes);
-
-
+    
+    // Continue in a repeating order to fill the timeslots up for max utilization 
+    size_t nodeIndex;
+    for (size_t i = 0; i < 900; i++) {
+        nodeIndex = (i + nextNodeInTimeSlotQueue) % numberOfNodes;
         timeslots->push_back(clients[nodeIndex]);
-        nextNodeInTimeSlotQueue++;
     }
 
+    // Remember what lora node we got to and continue from there next time
+    nextNodeInTimeSlotQueue = (nodeIndex+1);
+    EV << "Next node MAC to send is: " << clients[(nextNodeInTimeSlotQueue % numberOfNodes)] << endl;
 
     EV_DETAIL << "Generated timeslots" << endl;
     std::vector<MacAddress>& vecRef = *timeslots;
