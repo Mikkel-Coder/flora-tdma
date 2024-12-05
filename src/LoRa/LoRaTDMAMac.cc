@@ -170,20 +170,26 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
     
     if (macState == RECEIVE) {
 
+        // Get and decode the LoRaTDMAGWFrame
         const auto &chunk = msg->peekAtFront<Chunk>();
         Ptr<LoRaTDMAGWFrame> frame = dynamicPtrCast<LoRaTDMAGWFrame>(constPtrCast<Chunk>(chunk));
 
-        clocktime_t synctime = frame->getSyncTime();
 
+        // Update our clock
+        clocktime_t synctime = frame->getSyncTime();
         clock->setClockTime(synctime);
 
+        // Check if we have a time slot
+        // TODO: Optimize for more and more nodes
         int timeslotIdx = -1;      
-        auto timeslotarraysize = frame->getTimeslotsArraySize();
+        auto timeslotarraysize = frame->getUsedTimeSlots();
+        EV << "The broadcasted timeslot size is: " << timeslotarraysize << endl;
         for (int i = 0; i < timeslotarraysize; i++)
         {
             MacAddress timeslotAddr = frame->getTimeslots(i);
             if (timeslotAddr == address)
             {
+                // We found ourself. Note the index. That is the time_index we can transmit
                 timeslotIdx = i;
                 break;
             }
@@ -210,6 +216,8 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
         /* Calculate the next receive slot, this is done in similar fashions as the transmit slot
          * But we take the total size of all transmissions in this "round"
          */
+
+        // This does not work, as we wait waaaaayy too long (because there is often not 1000 nodes)
         clocktime_t rxSlotStartTime = txslotDuration*timeslotarraysize + broadcastGuard + endRXSlot->getArrivalClockTime();
         EV << "RX slot START time set on the clock: " << rxSlotStartTime << endl;
         EV << "RX slot END time set on the clock: " << rxSlotStartTime + rxslotDuration << endl;
@@ -316,6 +324,8 @@ void LoRaTDMAMac::handleState(cMessage *msg)
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: LISTEN -> SLEEP" << endl;
             macState = SLEEP;
+        
+        // If the radio is in a reception state, we must also receive it
         } else if (msg == mediumStateChange && radio->getReceptionState() == IRadio::RECEPTION_STATE_RECEIVING) {
             EV_DETAIL << "transition: LISTEN -> RECEIVE" << endl;
             macState = RECEIVE;

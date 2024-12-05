@@ -37,7 +37,6 @@ simple LoRaTDMAGWMac extends MacProtocolBase like IMacProtocol
         int cwMax = default(1023); // maximum contention window
         int cwMulticast = default(cwMin); // multicast contention window
         int retryLimit = default(7); // maximum number of retries
-        int numOfTimeslots = default(300);
         double txslotDuration @unit(s) = default(20s);
         double rxslotDuration @unit(s) = default(12s);
         double broadcastGuard @unit(s) = default(1s);

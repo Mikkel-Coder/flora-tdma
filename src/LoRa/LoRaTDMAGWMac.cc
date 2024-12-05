@@ -35,7 +35,6 @@ void LoRaTDMAGWMac::initialize(int stage)
         const char *addressString = par("address");
         GW_forwardedDown = 0;
         GW_droppedDC = 0;
-        numOfTimeslots = par("numOfTimeslots");
         txslotDuration = par("txslotDuration");
         rxslotDuration = par("rxslotDuration");
         broadcastGuard = par("broadcastGuard");
@@ -87,11 +86,14 @@ void LoRaTDMAGWMac::initialize(int stage)
                     clients[i++] = nodeAddress;
                 }
             }
-            if (i > 1000) {
+            if (i > MAX_MAC_ADDR_GW_FRAME) {
                 throw cRuntimeError("Too many clients");
             }
         }
+        numberOfNodes = i;
+        EV << "Number of nodes in this simulation is: " << numberOfNodes << endl;
         radio->setRadioMode(IRadio::RADIO_MODE_RECEIVER);
+        nextNodeInTimeSlotQueue = clients;
     }
 }
 
@@ -145,9 +147,26 @@ void LoRaTDMAGWMac::createTimeslots() {
     timeslots->clear();
 
     // TODO: make this not a loop and something more intelligent
-    // Clients 300+ do not have timeslots
-    for (size_t i = 0; i < 300; i++) {
-        timeslots->push_back(clients[i]);
+    // Clients 300+ do not have timeslots. They should have, now define by MAX_MAC_ADDR_GW_FRAME
+    for (size_t i = 0; i < numberOfNodes; i++) {
+        // Get the current node pointer + i % 900
+
+        // Are we too many?
+        if (i >= 900) {
+            nextNodeInTimeSlotQueue;
+            // They they are the first in the next round
+        }
+
+
+        // Check if we can loop again
+
+
+
+        size_t nodeIndex = i + (i % numberOfNodes);
+
+
+        timeslots->push_back(clients[nodeIndex]);
+        nextNodeInTimeSlotQueue++;
     }
 
 
@@ -158,7 +177,7 @@ void LoRaTDMAGWMac::createTimeslots() {
         EV_DEBUG << "timeslot[" << i << "] = " << vecRef[i] << endl;
     }
     
-    ASSERT(timeslots->size() == 300);
+    ASSERT(timeslots->size() == 900);
 }
 
 void LoRaTDMAGWMac::handleState(cMessage *msg)
@@ -176,6 +195,7 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
             frame->setTransmitterAddress(address);
             frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()) + ClockTime(17.440768)); // FIXME: Calculated the extra time
+            frame->setUsedTimeSlots(900);
             createTimeslots();
             std::vector<MacAddress>& vecRef = *timeslots;
             for (size_t i = 0; i < timeslots->size(); i++) {
@@ -191,7 +211,7 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             EV_DETAIL << "transition: TRANSMIT -> RECEIVE" << endl;
             macState = RECEIVE;
             // Schedule next broadcast
-            simtime_t txStartTime = simTime() + rxslotDuration*numOfTimeslots + broadcastGuard;
+            simtime_t txStartTime = simTime() + rxslotDuration*900 + broadcastGuard; // Check if broadcast does not exceed 20sec in total because it is now dynamic
             simtime_t txEndTime = txStartTime + txslotDuration;
             EV << "TX slot START time set in simtime: " << txStartTime << endl;
             EV << "TX slot END time set in simtime: " << txEndTime << endl;

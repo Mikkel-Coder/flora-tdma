@@ -108,6 +108,7 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
                 // sentPackets++;
             delete msg;
 
+            // Make this into a poission (randomness)
             Packet *pkt = new Packet("DataFrame");
             IntrusivePtr<LoRaAppRandomData> payload = makeShared<LoRaAppRandomData>();
             char text[20] = "This is data, okay.";

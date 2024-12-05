@@ -37,6 +37,8 @@ namespace flora_tdma {
 using namespace inet;
 using namespace inet::physicallayer;
 
+constexpr int MAX_MAC_ADDR_GW_FRAME = 1000; // If change remember to change it in the .msg file also 
+
 class LoRaTDMAGWMac: public MacProtocolBase {
 public:
     virtual void initialize(int stage) override;
@@ -44,7 +46,7 @@ public:
     virtual void configureNetworkInterface() override;
     long GW_forwardedDown;
     long GW_droppedDC;
-    int numOfTimeslots;
+    int numberOfNodes;
     simtime_t txslotDuration;
     simtime_t rxslotDuration;
     simtime_t broadcastGuard;
@@ -55,8 +57,11 @@ public:
     cMessage *endTXSlot;
     cMessage *startTransmit;
 
-    MacAddress clients[1000];
+    MacAddress clients[MAX_MAC_ADDR_GW_FRAME] = { inet::MacAddress("00:00:00:00:00:00") };
     std::vector<MacAddress> *timeslots;
+    MacAddress *nextNodeInTimeSlotQueue;
+
+    int usedTimeSlots;
 
     /** @name MAC States */
     enum States {

@@ -28,6 +28,7 @@ namespace flora_tdma;
 class LoRaTDMAGWFrame extends inet::FieldsChunk {
     inet::MacAddress transmitterAddress;
     inet::clocktime_t syncTime;
+    int usedTimeSlots;
     // Order of timeslots matter, the slots will happen in the order of this array
-    inet::MacAddress timeslots[300];
+    inet::MacAddress timeslots[1000];
 }
