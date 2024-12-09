@@ -30,6 +30,8 @@ void SimpleLoRaApp::initialize(int stage)
         std::pair<double,double> coordsValues = std::make_pair(-1, -1);
         cModule *host = getContainingNode(this);
         // Generate random location for nodes if circle deployment type
+
+        // This is not possible to do at runtime
         if (strcmp(host->par("deploymentType").stringValue(), "circle")==0) {
            coordsValues = generateUniformCircleCoordinates(host->par("maxGatewayDistance").doubleValue(), host->par("gatewayX").doubleValue(), host->par("gatewayY").doubleValue());
            StationaryMobility *mobility = check_and_cast<StationaryMobility *>(host->getSubmodule("mobility"));
@@ -108,7 +110,7 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
                 // sentPackets++;
             delete msg;
 
-            // Make this into a poission (randomness)
+            // Make this into a poisson (randomness)
             Packet *pkt = new Packet("DataFrame");
             IntrusivePtr<LoRaAppRandomData> payload = makeShared<LoRaAppRandomData>();
             char text[20] = "This is data, okay.";

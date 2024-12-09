@@ -280,6 +280,9 @@ void LoRaTDMAMac::handleState(cMessage *msg)
                  */
                 EV << "Nothing to send, doing nothing" << endl;
                 clock->cancelClockEvent(endTXSlot);
+                clock->cancelClockEvent(startTransmit);
+                if (!nextTimeSlots.empty())
+                    handleNextTXSlot();
                 return;
             }
 

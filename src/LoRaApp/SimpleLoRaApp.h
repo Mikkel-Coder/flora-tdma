@@ -17,6 +17,7 @@
 #define __LORA_OMNET_SIMPLELORAAPP_H_
 
 #include <omnetpp.h>
+#include <random>
 #include "inet/common/lifecycle/ILifecycle.h"
 #include "inet/common/lifecycle/NodeStatus.h"
 #include "inet/common/ModuleAccess.h"
