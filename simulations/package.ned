@@ -16,18 +16,18 @@ network LoRaNetworkTest
     parameters:
         int numberOfNodes = default(1);
         int numberOfGateways = default(1);
-        int networkSizeX = default(1000);
-        int networkSizeY = default(1000);
-        @display("bgb=887,596");
+        int networkSizeX = default(200);
+        int networkSizeY = default(200);
+        @display("bgb=200,200");
     submodules:
         loRaNodes[numberOfNodes]: LoRaNode {
-            @display("p=400,304");
+            @display("p=50,50");
         }
         loRaGW[numberOfGateways]: LoRaGW {
             @display("p=100,100;is=s");
         }
         LoRaMedium: LoRaMedium {
-            @display("p=300,200");
+            @display("p=180,180");
         }
     connections:
 }

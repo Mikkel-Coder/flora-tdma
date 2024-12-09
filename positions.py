@@ -3,8 +3,8 @@ from math import pi, sin, cos
 
 
 
-center = 500, 500
-max_radius = 500 
+center = 100, 100
+max_radius = 100 
 max_number_of_loranodes = 2000
 
 
