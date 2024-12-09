@@ -12,6 +12,7 @@
 #include "inet/queueing/contract/IPacketQueue.h"
 #include "inet/linklayer/contract/IMacProtocol.h"
 #include "inet/clock/model/SettableClock.h"
+#include <queue>
 
 #include "LoRaRadio.h"
 
@@ -46,6 +47,9 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
 
     /** End of the Short Inter-Frame Time period */
     cMessage *endSifs = nullptr;
+
+    std::queue<int> nextTimeSlots;
+    clocktime_t lastRXendTime;
 
     /** @name MAC States */
     enum States {
@@ -118,6 +122,7 @@ class LoRaTDMAMac : public MacProtocolBase, public IMacProtocol, public queueing
     virtual void handleLowerPacket(Packet *packet) override;
     // virtual void handleWithFsm(cMessage *msg);
     virtual void handleState(cMessage *msg);
+    virtual void handleNextTXSlot();
 
     virtual void receiveSignal(cComponent *source, simsignal_t signalID, intval_t value, cObject *details) override;
 

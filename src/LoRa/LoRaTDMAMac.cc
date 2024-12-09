@@ -181,8 +181,8 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
 
         // Check if we have a time slot
         // TODO: Check and save what receive windows we have been given and use them
-        int timeslotIdx = -1;      
         auto timeslotarraysize = frame->getUsedTimeSlots();
+        nextTimeSlots = {};
         EV << "The broadcasted timeslot size is: " << timeslotarraysize << endl;
         for (int i = 0; i < timeslotarraysize; i++)
         {
@@ -190,38 +190,25 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
             if (timeslotAddr == address)
             {
                 // We found ourself. Note the index. That is the time_index we can transmit
-                timeslotIdx = i;
-
-                // TODO: Instead of beak continue to search as we might have been given another
-                // (or more than one) timeslot that we can transmit in
-                break;
+                nextTimeSlots.push(i);
+                EV << "We got to TX in slot number: " << i << endl;
             }
         }
 
-        if (timeslotIdx == -1) {
+        if (nextTimeSlots.empty()) {
             EV << "No timeslot for me" << endl;
-            return;
         }
-
-        /* Calculate the clock time when we can send, this is based on 3 things:
-         * 1. The Duration of a txSlot times our timeslotIdx (so the times of all transmissions before ours)
-         * 2. The broadcast guard interval
-         * 3. The end of the receive slot (as given by the arrival clock of the endRXSlot)
-         */
-        clocktime_t txSlotStartTime = txslotDuration*timeslotIdx + broadcastGuard + endRXSlot->getArrivalClockTime();
-        EV << "TX slot START time set on the clock: " << txSlotStartTime << endl;
-        EV << "TX slot END time set on the clock: " << txSlotStartTime + txslotDuration << endl;
-        EV << "Start of us transmitting set on the clock: " << txSlotStartTime + startTransmitOffset << endl;
-        clock->scheduleClockEventAt(txSlotStartTime, startTXSlot); // Schedule our transmission slot
-        clock->scheduleClockEventAt(txSlotStartTime + txslotDuration, endTXSlot); // Schedule the end of our transmission slot
-        clock->scheduleClockEventAt(txSlotStartTime + startTransmitOffset, startTransmit); // The actual point that we start to transmit
+        else {
+            lastRXendTime = endRXSlot->getArrivalClockTime();
+            handleNextTXSlot();
+        }
 
         /* Calculate the next receive slot, this is done in similar fashions as the transmit slot
          * But we take the total size of all transmissions in this "round"
          */
 
         // This does not work, as we wait waaaaayy too long (because there is often not 1000 nodes)
-        clocktime_t rxSlotStartTime = txslotDuration*timeslotarraysize + broadcastGuard + endRXSlot->getArrivalClockTime();
+        clocktime_t rxSlotStartTime = txslotDuration*timeslotarraysize + broadcastGuard + lastRXendTime;
         EV << "RX slot START time set on the clock: " << rxSlotStartTime << endl;
         EV << "RX slot END time set on the clock: " << rxSlotStartTime + rxslotDuration << endl;
         clock->cancelClockEvent(endRXSlot); // Cancel the event before rescheduling
@@ -319,6 +306,8 @@ void LoRaTDMAMac::handleState(cMessage *msg)
             EV_DETAIL << "transition: TRANSMIT -> SLEEP" << endl;
             macState = SLEEP;
             currentTxFrame = nullptr;
+            if (!nextTimeSlots.empty())
+                handleNextTXSlot();
         }
         break;
 
@@ -350,6 +339,27 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         throw cRuntimeError("Unknown MAC State: %d", macState);
         break;
     }
+}
+
+void LoRaTDMAMac::handleNextTXSlot() 
+{
+    int timeslotIdx = nextTimeSlots.front();
+    EV << "Trying to use timeslot: " << timeslotIdx << endl;
+
+    /* Calculate the clock time when we can send, this is based on 3 things:
+    * 1. The Duration of a txSlot times our timeslotIdx (so the times of all transmissions before ours)
+    * 2. The broadcast guard interval
+    * 3. The end of the receive slot (as given by the arrival clock of the endRXSlot)
+    */
+    clocktime_t txSlotStartTime = txslotDuration*timeslotIdx + broadcastGuard + lastRXendTime;
+    EV << "TX slot START time set on the clock: " << txSlotStartTime << endl;
+    EV << "TX slot END time set on the clock: " << txSlotStartTime + txslotDuration << endl;
+    EV << "Start of us transmitting set on the clock: " << txSlotStartTime + startTransmitOffset << endl;
+    clock->scheduleClockEventAt(txSlotStartTime, startTXSlot); // Schedule our transmission slot
+    clock->scheduleClockEventAt(txSlotStartTime + txslotDuration, endTXSlot); // Schedule the end of our transmission slot
+    clock->scheduleClockEventAt(txSlotStartTime + startTransmitOffset, startTransmit); // The actual point that we start to transmit
+
+    nextTimeSlots.pop();
 }
 
 /*
