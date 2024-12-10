@@ -40,7 +40,7 @@ function open_code() {
 function tdmarun() {
 	OLDPWD=$PWD && \
 	cd $PWD/simulations && \
-	./tdmarun.sh && \
+	./tdmarun.sh
 	cd $OLDPWD
 }
 
