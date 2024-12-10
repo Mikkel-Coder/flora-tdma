@@ -4,7 +4,11 @@ PROGRAM=opp_run
 
 CONFIGFILE=flora-tdma.ini
 
-SIMENV=Qtenv
+SIMENV=$CUSTOM_SIMENV
+
+if [[ $SIMENV -eq "" ]]; then
+	SIMENV=Qtenv
+fi
 
 NEDPATHS=(
 	.
