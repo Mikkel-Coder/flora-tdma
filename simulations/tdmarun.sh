@@ -54,6 +54,6 @@ for lib in "${LIBRARIES[@]}"; do
 done
 
 
-CMD="${PROGRAM} ${OPTS[@]} ${CONFIGFILE}"
+CMD="${PROGRAM} ${OPTS[@]} $@ ${CONFIGFILE}"
 
 $CMD
