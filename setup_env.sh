@@ -37,4 +37,11 @@ function open_code() {
 	code ../../
 }
 
-echo "[+] The functions are 'rebuild_inet', 'rebuild_flora' and 'open_code'"
+function tdmarun() {
+	OLDPWD=$PWD && \
+	cd $PWD/simulations && \
+	./tdmarun.sh && \
+	cd $OLDPWD
+}
+
+echo "[+] The functions are 'rebuild_inet', 'rebuild_flora', 'open_code' and 'tdmarun'"
