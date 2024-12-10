@@ -33,13 +33,20 @@ Define_Module(LoRaTDMAMac);
 LoRaTDMAMac::~LoRaTDMAMac()
 {
     /* self cMessages */
-    clock->cancelClockEvent(startRXSlot);
-    clock->cancelClockEvent(endRXSlot);
-    clock->cancelClockEvent(startTXSlot);
-    clock->cancelClockEvent(endTXSlot);
-    clock->cancelClockEvent(startTransmit);
+    cancelAndDelete(startRXSlot);
+    cancelAndDelete(endRXSlot);
+    cancelAndDelete(startTXSlot);
+    cancelAndDelete(endTXSlot);
+    cancelAndDelete(startTransmit);
+    // clock->cancelClockEvent(startRXSlot);
+    // clock->cancelClockEvent(endRXSlot);
+    // clock->cancelClockEvent(startTXSlot);
+    // clock->cancelClockEvent(endTXSlot);
+    // clock->cancelClockEvent(startTransmit);
     cancelAndDelete(endTransmission);
     cancelAndDelete(endReception);
+    cancelAndDelete(mediumStateChange);
+    cancelAndDelete(endRXEarly);
 
     /* What about the Queue? Perhaps clearQueue() */
 }
@@ -214,6 +221,7 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
         clock->cancelClockEvent(endRXSlot); // Cancel the event before rescheduling
         clock->scheduleClockEventAt(rxSlotStartTime, startRXSlot); // Schedule the next receive slot to listen to the gateway
         clock->scheduleClockEventAt(rxSlotStartTime + rxslotDuration, endRXSlot); // And the end
+        delete msg;
         handleState(endRXEarly);
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;

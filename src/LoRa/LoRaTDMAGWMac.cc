@@ -86,9 +86,9 @@ void LoRaTDMAGWMac::initialize(int stage)
                     clients[i++] = nodeAddress;
                 }
             }
-            if (i > MAX_MAC_ADDR_GW_FRAME) {
-                throw cRuntimeError("Too many clients");
-            }
+            // if (i > MAX_MAC_ADDR_GW_FRAME) {
+            //     throw cRuntimeError("Too many clients");
+            // }
         }
         numberOfNodes = i;
         EV << "Number of nodes in this simulation is: " << numberOfNodes << endl;
@@ -137,8 +137,8 @@ void LoRaTDMAGWMac::handleLowerMessage(cMessage *msg)
     } else {
         EV << "Got message from lower layer: " << msg << ". But not in RECEIVE, discarding" << endl;
         EV_DEBUG << "macState: " << macState << endl;
-        delete msg;
     }
+    delete msg;
     
 }
 
