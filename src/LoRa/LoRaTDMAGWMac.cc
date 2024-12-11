@@ -45,7 +45,7 @@ void LoRaTDMAGWMac::initialize(int stage)
         endTXSlot = new cMessage("endTXSlot");
         startTransmit = new cMessage("startTransmit");
 
-        timeslots = new std::vector<MacAddress>(900);
+        timeslots = new std::vector<MacAddress>(100);
 
         if (!strcmp(addressString, "auto")) {
             // assign automatic address
