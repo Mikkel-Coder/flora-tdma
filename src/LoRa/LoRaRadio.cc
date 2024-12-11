@@ -45,6 +45,7 @@ void LoRaRadio::initialize(int stage)
     NarrowbandRadioBase::initialize(stage);
     if (stage == INITSTAGE_LOCAL) {
         iAmGateway = par("iAmGateway").boolValue();
+        loRaTP = 14;
     }
 }
 
