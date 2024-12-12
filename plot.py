@@ -20,6 +20,7 @@ json_path_clean: Path = path / 'data_clean.json'
 
 ln_re_pattern = r'LoRaNetworkTest\.loRaNodes\[(\d+)\]'
 
+time = 3 * 60 * 60 # hours to sec
 
 def generate_pickle():
     logger.info("Reading json file...")
@@ -54,6 +55,7 @@ def clean_pickle_data():
             r'\.LoRaNic\.radio\.energyConsumer'
 
         total_power_sum = 0
+        amount_of_power_measurements = 0
 
         queue_module_pattern = ln_re_pattern + \
             r'\.LoRaNic\.queue'
@@ -75,6 +77,7 @@ def clean_pickle_data():
                         this_node['power'].append(value)
 
                 power_sum = sum(this_node['power'])
+                amount_of_power_measurements += len(this_node['power'])
                 this_node['power_sum'] = power_sum
                 total_power_sum += power_sum
 
@@ -95,6 +98,7 @@ def clean_pickle_data():
                 total_packet_length_sum += packet_length_sum
 
         current_sec['total_power_sum'] = total_power_sum
+        current_sec['total_power_mean'] = total_power_sum / amount_of_power_measurements
         current_sec['total_packet_length_sum'] = total_packet_length_sum
 
         logger.info(f'Total Power Sum: {total_power_sum}')
@@ -111,27 +115,26 @@ def clean_pickle_data():
 
 def plot_power_consumption_per_node(data: dict):
     x = sorted(int(key) for key in data.keys())
-    y = [data[str(key)]["total_power_sum"] / key for key in x]
+    y = [data[str(key)]["total_power_mean"] / key * 1000 for key in x]
     
     plt.figure(figsize=(8, 5))
     plt.plot(x, y, marker="o", linestyle="-", color="blue")
-    plt.title("Power Consumption per Node")
     plt.xlabel("Number of Nodes")
-    plt.ylabel("Power Consumption")
+    plt.ylabel("Power Consumption [mJ]")
     plt.grid(True)
     plt.show()
 
 def plot_throughput_per_node(data: dict):
     x = sorted(int(key) for key in data.keys())
-    time = 6 * 60 * 60
     y = [data[str(key)]["total_packet_length_sum"] / time for key in x]
 
     plt.figure(figsize=(8, 5))
     plt.plot(x, y, marker="o", linestyle="-", color="blue")
     plt.xlabel("Number of Nodes")
-    plt.ylabel("Throughput per Node")
+    plt.ylabel("Throughput per Node [bps]")
     plt.grid(True)
     plt.show()
+
 
 def main() -> None:
     # opp_scavetool index flora-tdma-1000.vec
@@ -152,8 +155,8 @@ def main() -> None:
 
     # plot power consumption per node
     #plot_power_consumption_per_node(data)
-    plot_throughput_per_node(data)
-    # plot Network Power Consumption
+    #plot_throughput_per_node(data)
+    #plot Network Power Consumption
     # Throughput
 
 
