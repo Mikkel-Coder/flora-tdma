@@ -83,6 +83,7 @@ void LoRaTDMAMac::initialize(int stage)
         // subscribe for the information of the carrier sense
         cModule *radioModule = getModuleFromPar<cModule>(par("radioModule"), this);
         radioModule->subscribe(IRadio::receptionStateChangedSignal, this);
+        radioModule->subscribe(inet::transmissionEndedSignal, this);
         // radioModule->subscribe(IRadio::transmissionStateChangedSignal, this);
         // radioModule->subscribe(LoRaRadio::droppedPacket, this);
         radio = check_and_cast<IRadio *>(radioModule);
@@ -323,7 +324,7 @@ void LoRaTDMAMac::handleState(cMessage *msg)
         }
         break;
 
-    case LISTEN: // TODO: find out how to switch to receive
+    case LISTEN:
         if (CHECKCLEV(msgclev, endRXSlot)) { // End of the receive slot
             radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
             EV_DETAIL << "transition: LISTEN -> SLEEP" << endl;
@@ -390,6 +391,8 @@ void LoRaTDMAMac::receiveSignal(cComponent *source, simsignal_t signalID, intval
 
         receptionState = newRadioReceptionState;
         handleState(mediumStateChange);
+    } else if (signalID == inet::transmissionEndedSignal) {
+        radio->setRadioMode(IRadio::RADIO_MODE_SLEEP);
     }    
 }
 
