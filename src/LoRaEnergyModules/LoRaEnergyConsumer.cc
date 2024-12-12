@@ -171,7 +171,7 @@ W LoRaEnergyConsumer::getPowerConsumption() const
         powerConsumption += mW(supplyVoltage*receiverBusySupplyCurrent);
     } else if (radioMode == IRadio::RADIO_MODE_TRANSMITTER) {
         LoRaRadio *radio = check_and_cast<LoRaRadio *>(getParentModule());
-        auto current = transmitterTransmittingSupplyCurrent.find(radio->loRaTP);
+        auto current = transmitterTransmittingSupplyCurrent.find(14);
         powerConsumption += mW(supplyVoltage*current->second);
     } else {
         powerConsumption += mW(supplyVoltage*idleSupplyCurrent);
