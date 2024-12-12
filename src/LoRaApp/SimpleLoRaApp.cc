@@ -29,6 +29,9 @@ void SimpleLoRaApp::initialize(int stage)
     if (stage == INITSTAGE_LOCAL) {
         std::pair<double,double> coordsValues = std::make_pair(-1, -1);
         cModule *host = getContainingNode(this);
+
+        lambdaApp = par("lambdaApp");
+
         // Generate random location for nodes if circle deployment type
 
         // This is not possible to do at runtime
@@ -122,7 +125,7 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
             pkt->insertAtFront(payload);
             send(pkt, "socketOut");
 
-            timeToNextPacket = exponential(1/0.001);
+            timeToNextPacket = exponential(1/lambdaApp);
             EV << "Next App packet comes in: " << timeToNextPacket << "s" << endl;
             sendMeasurements = new cMessage("sendMeasurements");
             scheduleAt(simTime() + timeToNextPacket, sendMeasurements);

@@ -45,7 +45,7 @@ void LoRaTDMAGWMac::initialize(int stage)
         endTXSlot = new cMessage("endTXSlot");
         startTransmit = new cMessage("startTransmit");
 
-        timeslots = new std::vector<MacAddress>(900);
+        timeslots = new std::vector<MacAddress>(100);
 
         if (!strcmp(addressString, "auto")) {
             // assign automatic address
@@ -151,7 +151,7 @@ void LoRaTDMAGWMac::createTimeslots() {
     
     // Continue in a repeating order to fill the timeslots up for max utilization 
     size_t nodeIndex;
-    for (size_t i = 0; i < 900; i++) {
+    for (size_t i = 0; i < 100; i++) {
         nodeIndex = (i + nextNodeInTimeSlotQueue) % numberOfNodes;
         timeslots->push_back(clients[nodeIndex]);
     }
@@ -167,7 +167,7 @@ void LoRaTDMAGWMac::createTimeslots() {
         EV_DEBUG << "timeslot[" << i << "] = " << vecRef[i] << endl;
     }
     
-    ASSERT(timeslots->size() == 900);
+    ASSERT(timeslots->size() == 100);
 }
 
 void LoRaTDMAGWMac::handleState(cMessage *msg)
@@ -184,14 +184,14 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             Packet *pkt = new Packet("GatewayBroadcast");
             IntrusivePtr<LoRaTDMAGWFrame> frame = makeShared<LoRaTDMAGWFrame>();
             frame->setTransmitterAddress(address);
-            frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()) + ClockTime(49.946624)); // FIXME: Calculated the extra time
-            frame->setUsedTimeSlots(900);
+            frame->setSyncTime(SIMTIME_AS_CLOCKTIME(simTime()) + ClockTime(6.42)); // FIXME: Calculated the extra time
+            frame->setUsedTimeSlots(100);
             createTimeslots();
             std::vector<MacAddress>& vecRef = *timeslots;
             for (size_t i = 0; i < timeslots->size(); i++) {
                 frame->setTimeslots(i, vecRef[i]);
             }
-            frame->setChunkLength(b(10+16+10*900)); // Calculated for now
+            frame->setChunkLength(b(10+16+10*100)); // Calculated for now
             pkt->insertAtFront(frame);
             pkt->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::apskPhy);
 
@@ -201,7 +201,7 @@ void LoRaTDMAGWMac::handleState(cMessage *msg)
             EV_DETAIL << "transition: TRANSMIT -> RECEIVE" << endl;
             macState = RECEIVE;
             // Schedule next broadcast
-            simtime_t txStartTime = simTime() + rxslotDuration*900 + broadcastGuard; // Check if broadcast does not exceed 20sec in total because it is now dynamic
+            simtime_t txStartTime = simTime() + rxslotDuration*100 + broadcastGuard; // Check if broadcast does not exceed 20sec in total because it is now dynamic
             simtime_t txEndTime = txStartTime + txslotDuration;
             EV << "TX slot START time set in simtime: " << txStartTime << endl;
             EV << "TX slot END time set in simtime: " << txEndTime << endl;

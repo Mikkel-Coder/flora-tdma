@@ -202,11 +202,12 @@ void LoRaTDMAMac::handleLowerPacket(Packet *msg)
             }
         }
 
+        lastRXendTime = endRXSlot->getArrivalClockTime();
+        
         if (nextTimeSlots.empty()) {
             EV << "No timeslot for me" << endl;
         }
         else {
-            lastRXendTime = endRXSlot->getArrivalClockTime();
             handleNextTXSlot();
         }
 

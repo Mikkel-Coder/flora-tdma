@@ -56,6 +56,8 @@ class SimpleLoRaApp : public cSimpleModule, public ILifecycle
         simtime_t timeToFirstPacket;
         simtime_t timeToNextPacket;
 
+        double lambdaApp;
+
         cMessage *configureLoRaParameters;
         cMessage *sendMeasurements;
 
