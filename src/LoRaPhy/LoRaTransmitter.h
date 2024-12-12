@@ -34,6 +34,7 @@ class LoRaTransmitter : public FlatTransmitterBase {
     private:
 
         bool iAmGateway;
+        int payloaddatasize;
 
         simsignal_t LoRaTransmissionCreated;
 

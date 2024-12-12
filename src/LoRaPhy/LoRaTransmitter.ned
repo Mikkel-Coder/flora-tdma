@@ -23,5 +23,6 @@ module LoRaTransmitter extends NarrowbandTransmitterBase
         @signal[LoRaTransmissionCreated](type=bool); // optional
         @statistic[LoRaTransmissionCreated](source=LoRaTransmissionCreated; record=count);
         modulation = default("LoRaModulation");
+        int payloaddatasize @unit(B) = default(20);
         @class(LoRaTransmitter);
 }

@@ -45,6 +45,7 @@ void LoRaTransmitter::initialize(int stage)
         {
             iAmGateway = true;
         } else iAmGateway = false;
+        payloaddatasize = par('payloaddatasize');
     }
 }
 
@@ -66,7 +67,7 @@ const ITransmission *LoRaTransmitter::createTransmission(const IRadio *transmitt
 
     int payloadBytes = 0;
     if(iAmGateway) payloadBytes = 128; // Calculated for now
-    else payloadBytes = 20;
+    else payloadBytes = payloaddatasize;
     int payloadSymbNb = 8;
     payloadSymbNb += std::ceil((8*payloadBytes - 4*frame->getSpreadFactor() + 28 + 16 - 20*0)/(4*(frame->getSpreadFactor()-2*0)))*(frame->getCodeRendundance() + 4);
     if(payloadSymbNb < 8) payloadSymbNb = 8;
