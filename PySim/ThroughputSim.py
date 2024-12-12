@@ -1,30 +1,33 @@
-import numpy as np
 import matplotlib.pyplot as plt
 
-throughputList = []
-maxNumberOfNodes = 150
+max_number_of_nodes = 150
 
 
 def sim():
-    gTime = 0.4
+    guard_time = 0.4
     broadcast = 7
-    headerSize = 2
-    packetSize = 20
-    maxPacketSize = 256
-    timeSlots = 100
-    packetAirtime = 11.6
-    lampda = 1/10**3
+    header_size = 2
+    packet_size = 20
+    max_packet_size = 256
+    time_slots = 100
+    packet_airtime = 11.6
+    lambda_value = 1/10**3
 
-    periodeTime = broadcast + (gTime + packetAirtime) * timeSlots
+    time_of_period = broadcast + (guard_time + packet_airtime) * time_slots
 
-    maxThroughputPossible = ((headerSize + maxPacketSize) / packetAirtime) * 8
-    maxThroughputForActualSize = (
-        (headerSize + packetSize) / packetAirtime) * 8
+    max_throughput_possible = (
+        (header_size + max_packet_size) / packet_airtime) * 8
+    max_throughput_for_packet_size = (
+        (header_size + packet_size) / packet_airtime) * 8
 
-    print(f"{maxThroughputPossible=}")
-    print(f"{maxThroughputForActualSize=}")
+    print(f"{max_throughput_possible=}")
+    print(f"{max_throughput_for_packet_size=}")
 
-    for nodecount in range(1, maxNumberOfNodes):
+    throughput_list = []
+
+    packetgen_break = 0
+
+    for nodecount in range(1, max_number_of_nodes):
         # print(f"\n{nodecount=}:")
         # perNodeairtime = (timeSlots/nodecount) * \
         #     (packetAirtime + gTime)  # Seconds on air
@@ -35,18 +38,20 @@ def sim():
 
         # print(f"{dutyTimepercentage=}")
 
-        expectedPacketPerNoder = lampda * periodeTime
+        expectedPacketPerNoder = lambda_value * time_of_period
 
         # print(f"{expectedPacketPerNoder=}")
 
-        packetSent = expectedPacketPerNoder / (timeSlots/nodecount)
+        packetSent = expectedPacketPerNoder / (time_slots/nodecount)
 
         # print(f"{packetSent=}")
 
         if packetSent > 1:
+            if packetgen_break == 0:
+                packetgen_break = nodecount
             packetSent = 1
 
-        maxthroughtimeslots = packetSize / (packetAirtime + gTime)
+        maxthroughtimeslots = packet_size / (packet_airtime + guard_time)
 
         # print(f"{maxthroughtimeslots=}")
 
@@ -55,19 +60,42 @@ def sim():
         # print(f"{throughPuttimeslot=}")
 
         throughput = throughPuttimeslot * 8
-        throughputList.append(throughput)
+        throughput_list.append(throughput)
         print(f"{throughput=}")
 
-    x = list(range(1, maxNumberOfNodes))
-    y = throughputList
-    print(f"{x=}, {y=}")
-    plt.plot(x, y)
-    # plt.axhline(maxThroughputPossible, linestyle="dashed",
+    x = list(range(1, max_number_of_nodes))
+    y = throughput_list
+
+    fig, ax = plt.subplots()
+
+    ax.plot(x, y, color="blue", label="Throughput")
+    ax.set_title("Theoretically Throughtput for node count " +
+                 f"[Packet Size: {packet_size}]")
+    ax.set_xlabel("Number of nodes")
+    ax.set_ylabel("Throughput [bps]")
+
+    # ax.axhline(max_throughput_possible, linestyle="dashed",
     #             label="Max Throughput Possible", color="red")
-    plt.axhline(maxThroughputForActualSize, linestyle="dashed",
-                label="Max Throughput For Size", color="orange")
-    plt.legend()
-    plt.show()
+    ax.axhline(max_throughput_for_packet_size, linestyle="dashed",
+               label="Max Throughput For Size", color="orange")
+    ax.axvline(packetgen_break, linestyle="dashed",
+               label="More packets then we can send", color="green")
+
+    ax.text(0.5, max_throughput_for_packet_size - 0.5,
+            f"{max_throughput_for_packet_size:.2f}", color='orange',
+            fontsize=12, ha='center', va='center')
+    ax.text(packetgen_break - 4, -0.15,
+            str(packetgen_break), color='green',
+            fontsize=12, ha='center', va='center')
+    ax.text(max_number_of_nodes - 8, throughput_list[-1] - 0.5,
+            f"{throughput_list[-1]:.2f}", color="blue",
+            fontsize=12, ha='center', va='center')
+
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
+    fig.savefig("plot.png")
+    plt.close(fig)
 
 
 if __name__ == "__main__":
