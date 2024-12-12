@@ -116,12 +116,8 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
             // Make this into a poisson (randomness)
             Packet *pkt = new Packet("DataFrame");
             IntrusivePtr<LoRaAppRandomData> payload = makeShared<LoRaAppRandomData>();
-            char text[20] = "This is data, okay.";
-            for (size_t i = 0; i < 20; i++)
-            {
-                payload->setText(i, text[i]);
-            }
-            payload->setChunkLength(B(20));
+            generateRandomAppData(payload, par("dataSize").intValue());
+            payload->setChunkLength(B(par("dataSize").intValue()));
             pkt->insertAtFront(payload);
             send(pkt, "socketOut");
 
@@ -136,6 +132,25 @@ void SimpleLoRaApp::handleMessage(cMessage *msg)
         handleMessageFromLowerLayer(msg);
         delete msg;
     }
+}
+
+void SimpleLoRaApp::generateRandomAppData(IntrusivePtr<LoRaAppRandomData> payload, int length)
+{
+    EV << "Got length: " << length << endl;
+    if (length < 0 || length > 254)
+    {
+        throw cRuntimeError("Unable to generate random AppData. Invalid dataSize");
+    }
+
+    for (size_t i = 0; i < length-1; i++)
+    {
+        char ascii_char = (char)intuniform(65,90); // ascii values [A-Z]
+        EV << "RANDOM CHAR: " << ascii_char << endl;
+        payload->setText(i, ascii_char);
+    }
+    payload->setText(length-1, '\0');
+    EV << "Generated random data with length: " << length << endl;
+
 }
 
 void SimpleLoRaApp::handleMessageFromLowerLayer(cMessage *msg)

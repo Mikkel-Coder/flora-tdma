@@ -48,7 +48,8 @@ class SimpleLoRaApp : public cSimpleModule, public ILifecycle
         std::pair<double,double> generateUniformCircleCoordinates(double radius, double gatewayX, double gatewayY);
         void sendJoinRequest();
         void sendDownMgmtPacket();
-
+        void generateRandomAppData(IntrusivePtr<LoRaAppRandomData> payload, int length);
+                
         int numberOfPacketsToSend;
         int sentPackets;
         int receivedADRCommands;
