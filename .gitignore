@@ -28,6 +28,9 @@ src/Makefile
 
 /out
 
+# Ignore python
+*.pyc
+
 # Ignore logs
 *.log
 
