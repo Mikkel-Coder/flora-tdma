@@ -1,17 +1,14 @@
 import json
 import pickle
 from pathlib import Path
-import logging
 import re
-import sys
+import subprocess
+from time import sleep
 
 import matplotlib.pyplot as plt
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stdout))
-logger.setLevel(logging.INFO)
-
 path = Path('samples/flora-tdma/simulations/results/')
+omnetpp_root = Path('.')
 # path = Path('.')
 json_vec_path: Path = path / 'data_vec.json'
 pickle_vec_path: Path = path / 'data_vec.pkl'
@@ -27,59 +24,67 @@ ln_re_pattern = r'LoRaNetworkTest\.loRaNodes\[(\d+)\]'
 time = 3 * 60 * 60 # hours to sec
 
 def generate_pickles():
-    logger.info("Reading vec json file...")
+    print("Reading vec json file...")
     with json_vec_path.open('r') as fp:
-        json_data = json.load(fp)
+        json_vec_data = json.load(fp)
 
-    logger.info("Writing json vec data to a pickle file...")
+    print("Writing json vec data to a pickle file...")
     with pickle_vec_path.open('wb') as fp:
-        pickle.dump(json_data, fp)
+        pickle.dump(json_vec_data, fp)
     
-    logger.info("Reading sca json file...")
+    del json_vec_data # For optimize
+    
+    print("Reading sca json file...")
     with json_sca_path.open('r') as fp:
-        json_data = json.load(fp)
+        json_sca_data = json.load(fp)
 
-    logger.info("Writing json sca data to a pickle file...")
+    print("Writing json sca data to a pickle file...")
     with pickle_sca_path.open('wb') as fp:
-        pickle.dump(json_data, fp)
+        pickle.dump(json_sca_data, fp)
+    
+    del json_sca_data
 
 def clean_pickles_data():
-    logger.info("Loading dirty vec pickle data..")
+    print("Loading dirty vec pickle data..")
     with pickle_vec_path.open('rb') as fp:
-        dirty_sca_data: dict = pickle.load(fp)
+        dirty_vec_data: dict = pickle.load(fp)
 
-    clean_vec_data = _clean_vec_data(dirty_sca_data)    
+    clean_vec_data = _clean_vec_data(dirty_vec_data)    
 
-    logger.info("Writing vec clean pickle data...")
+    print("Writing vec clean pickle data...")
     with pickle_vec_path_clean.open('wb') as fp:
         pickle.dump(clean_vec_data, fp)
 
-    logger.info("Writing clean vec data to json file...")
+    print("Writing clean vec data to json file...")
     with json_vec_path_clean.open('w') as fp:
         json.dump(clean_vec_data, fp)
+    
+    del clean_vec_data
 
-    logger.info("Loading dirty sca pickle data..")
+    print("Loading dirty sca pickle data..")
     with pickle_sca_path.open('rb') as fp:
-        dirty_vec_data: dict = pickle.load(fp)
+        dirty_sca_data: dict = pickle.load(fp)
 
     clean_sca_data = _clean_sca_data(dirty_sca_data)
 
-    logger.info("Writing sca clean pickle data...")
-    with pickle_vec_path_clean.open('wb') as fp:
+    print("Writing sca clean pickle data...")
+    with pickle_sca_path_clean.open('wb') as fp:
         pickle.dump(clean_sca_data, fp)
 
-    logger.info("Writing clean sca data to json file...")
-    with json_vec_path_clean.open('w') as fp:
+    print("Writing clean sca data to json file...")
+    with json_sca_path_clean.open('w') as fp:
         json.dump(clean_sca_data, fp)
+    
+    del clean_sca_data
 
 
 def _clean_vec_data(dirty_data: dict):
     # Clean
-    logger.info("Cleaning dirty data...")
+    print("Cleaning dirty data...")
     clean_vec_data = dict()
     for key in dirty_data.keys():
         numNodes = dirty_data[key]["itervars"]["numNodes"]
-        logger.info(f"\nCleaning data for {numNodes} node sim...")
+        print(f"\nCleaning data for {numNodes} node sim...")
         clean_vec_data[numNodes] = {}
         current_sec = clean_vec_data[numNodes]
 
@@ -88,20 +93,18 @@ def _clean_vec_data(dirty_data: dict):
 
         vectors = dirty_data[key]["vectors"]
 
-        total_power_sum = 0
-
         queue_module_pattern = ln_re_pattern + \
             r'\.LoRaNic\.queue'
 
         total_packet_length_sum = 0
 
-        logger.info('Running through vectors...')
+        print('Running through vectors...')
         for vector in vectors:
             queue_match = re.match(queue_module_pattern, vector['module'])
             if (queue_match and
                     vector['name'] == 'outgoingPacketLengths:vector'):
                 nodeNumber = int(queue_match.group(1))
-                logger.debug(f'Found packet lengths for node {nodeNumber}')
+                #print(f'Found packet lengths for node {nodeNumber}')
                 this_node = current_sec[nodeNumber]
                 this_node['packet_lengths'] = []
 
@@ -113,28 +116,58 @@ def _clean_vec_data(dirty_data: dict):
                 this_node['packet_length_sum'] = packet_length_sum
                 total_packet_length_sum += packet_length_sum
 
-        #current_sec['total_power_sum'] = total_power_sum
         current_sec['total_packet_length_sum'] = total_packet_length_sum
 
-        logger.info(f'Total Power Sum: {total_power_sum}')
-        logger.info(f'Total Packet length Sum: {total_packet_length_sum}')
+        print(f'Total Packet length Sum: {total_packet_length_sum}')
     
     return clean_vec_data
 
 def _clean_sca_data(dirty_data: dict):
-    ...
+    clean_sca_data = dict()
+    for key in dirty_data.keys():
+        numNodes: str = dirty_data[key]["itervars"]["numNodes"]
+        print(f"\nCleaning data for {numNodes} node sim...")
+        clean_sca_data[numNodes] = {}
+        current_sec = clean_sca_data[numNodes]
+
+        for i in range(int(numNodes)):
+            current_sec[i] = {}
+        
+        scalars = dirty_data[key]["scalars"]
+
+        energy_module_pattern = ln_re_pattern + \
+            r'\.LoRaNic\.radio\.energyConsumer'
+        
+        total_energy_consumed: float = 0.
+
+        for scalar in scalars:
+            energy_match = re.match(energy_module_pattern, scalar['module'])
+            if (energy_match and
+                    scalar['name'] == 'totalEnergyConsumed'):
+                nodeNumber = int(energy_match.group(1))
+                
+                this_node = current_sec[nodeNumber]
+                this_node['energy_consumed'] = scalar['value']
+                total_energy_consumed += this_node['energy_consumed']
+    
+        current_sec['total_energy_consumed'] = total_energy_consumed
+        current_sec['mean_node_energy_consumption'] = \
+            total_energy_consumed / int(numNodes)
+
+    return clean_sca_data
 
 def plot_power_consumption_per_node(data: dict):
     # TODO: Update for new sca data set
-    x = sorted(int(key) for key in data.keys())
-    y = [data[str(key)]["total_power_mean"] / key * 1000 for key in x]
+    ...
+    # x = sorted(int(key) for key in data.keys())
+    # y = [data[str(key)]["total_power_mean"] / key * 1000 for key in x]
     
-    plt.figure(figsize=(8, 5))
-    plt.plot(x, y, marker="o", linestyle="-", color="blue")
-    plt.xlabel("Number of Nodes")
-    plt.ylabel("Power Consumption [mJ]")
-    plt.grid(True)
-    plt.show()
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(x, y, marker="o", linestyle="-", color="blue")
+    # plt.xlabel("Number of Nodes")
+    # plt.ylabel("Power Consumption [mJ]")
+    # plt.grid(True)
+    # plt.show()
 
 def plot_throughput(data: dict):
     x = sorted(int(key) for key in data.keys())
@@ -147,24 +180,86 @@ def plot_throughput(data: dict):
     plt.grid(True)
     plt.show()
 
-
-def main() -> None:
+def generate_omnetpp_json():
     # opp_scavetool index flora-tdma-1000.vec
     # opp_scavetool x -o data_vec.json *.vec
     # opp_scavetool x -o data_sca.json *.sca
-    if not pickle_vec_path.exists():
-        logger.info("No pickle data found. Generating one...")
+    vec_command: str = "bash -c \"source setenv " + \
+        "&& cd samples/flora-tdma/simulations/results " + \
+        "&& opp_scavetool x -o data_vec.json *.vec\""
+    
+    sca_command: str = "bash -c \"source setenv " + \
+        "&& cd samples/flora-tdma/simulations/results " + \
+        "&& opp_scavetool x -o data_sca.json *.sca\""
+    
+    print("Creating omnetpp export vec data job.")
+    process_vec = subprocess.Popen(
+        vec_command,
+        shell=True,
+        cwd=omnetpp_root,
+        stdout=subprocess.DEVNULL
+    )
+
+    print("Waiting for vec data to be generated:", end='')
+    while process_vec.poll() is None:
+        print(".", end='', flush=True)
+        sleep(2)
+    
+    exit_code = process_vec.wait() 
+    if exit_code != 0:
+        print(f"Unable to generate data_vec.json, exit code: {exit_code}")
+        exit(1)
+    
+    print("Creating omnetpp export sca data job.")
+    process_sca = subprocess.Popen(
+        sca_command,
+        shell=True,
+        cwd=omnetpp_root,
+        stdout=subprocess.DEVNULL
+    )
+
+    print("Waiting for sca data to be generated:", end='')
+    while process_sca.poll() is None:
+        print(".", end='', flush=True)
+        sleep(3)
+    
+    exit_code = process_sca.wait() 
+    if exit_code != 0:
+        print(f"Unable to generate data_sca.json, exit code: {exit_code}")
+        exit(1)
+
+
+def main() -> None:
+    pattern = re.compile(r"flora-tdma-\d+\.(vec|sca)")
+    sca_and_vec_files = path.iterdir()
+    matching_files = [f.name for f in sca_and_vec_files if f.is_file() and pattern.match(f.name)]
+
+    if not matching_files:
+        print("No OMNet++ output files found. Please run the simulation first using OMNet++.")
+        exit(1)
+    
+    if not json_vec_path.exists() or not json_sca_path.exists():
+        print("No json data found. Generating it.")
+        generate_omnetpp_json()
+
+    if not pickle_vec_path.exists() or not pickle_sca_path.exists():
+        print("No pickle data found. Generating...")
         generate_pickles()
 
-    if not pickle_vec_path_clean.exists():
-        logger.info("No clean pickle data found. Cleaning ...")
+    if not pickle_vec_path_clean.exists() or not pickle_sca_path_clean.exists():
+        print("No clean pickle data found. Cleaning...")
         clean_pickles_data()
 
-    logger.info("Loading clean pickle data...")
+    print("Loading clean vec pickle data...")
     with pickle_vec_path_clean.open('rb') as fp:
-        data: dict = pickle.load(fp)
+        data_vec: dict = pickle.load(fp)
 
-    print(data)
+    print("Loading clean sca pickle data...")
+    with pickle_sca_path_clean.open('rb') as fp:
+        data_sca: dict = pickle.load(fp)
+
+    print(data_vec)
+    print(data_sca)
 
     # plot power consumption per node
     #plot_power_consumption_per_node(data)
