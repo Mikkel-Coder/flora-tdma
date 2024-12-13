@@ -233,3 +233,18 @@ def load_clean_dataset() -> tuple[dict, dict]:
         data_sca: dict = pickle.load(fp)
     
     return data_vec, data_sca
+
+def calculate_power_consumption_per_node(data_sca: dict) -> tuple[list[int], list[float]]:
+    x = sorted(int(key) for key in data_sca.keys())
+    y = [data_sca[str(key)]['mean_node_energy_consumption'] for key in x]
+    return x, y 
+
+def calculate_throughput(data_vec: dict, conf: dict) -> tuple[list[int], list[float]]:
+    x = sorted(int(key) for key in data_vec.keys())
+    y = [data_vec[str(key)]['total_packet_length_sum'] / conf['time'] for key in x]
+    return x, y
+
+def calculate_network_energy_consumption(data_sca: dict) -> tuple[list[int], list[float]]:
+    x = sorted(int(key) for key in data_sca.keys())
+    y = [data_sca[str(key)]['total_energy_consumed'] for key in x]
+    return x, y
