@@ -157,17 +157,15 @@ def _clean_sca_data(dirty_data: dict):
     return clean_sca_data
 
 def plot_power_consumption_per_node(data: dict):
-    # TODO: Update for new sca data set
-    ...
-    # x = sorted(int(key) for key in data.keys())
-    # y = [data[str(key)]["total_power_mean"] / key * 1000 for key in x]
+    x = sorted(int(key) for key in data.keys())
+    y = [data[str(key)]["mean_node_energy_consumption"] for key in x]
     
-    # plt.figure(figsize=(8, 5))
-    # plt.plot(x, y, marker="o", linestyle="-", color="blue")
-    # plt.xlabel("Number of Nodes")
-    # plt.ylabel("Power Consumption [mJ]")
-    # plt.grid(True)
-    # plt.show()
+    plt.figure(figsize=(8, 5))
+    plt.plot(x, y, marker="o", linestyle="-", color="blue")
+    plt.xlabel("Number of Nodes")
+    plt.ylabel("Power Consumption Per Node [Joule]")
+    plt.grid(True)
+    plt.show()
 
 def plot_throughput(data: dict):
     x = sorted(int(key) for key in data.keys())
@@ -262,7 +260,7 @@ def main() -> None:
     print(data_sca)
 
     # plot power consumption per node
-    #plot_power_consumption_per_node(data)
+    plot_power_consumption_per_node(data_sca)
     #plot_throughput_per_node(data)
     #plot Network Power Consumption
     # Throughput
