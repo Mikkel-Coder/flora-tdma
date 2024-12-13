@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pickle
 
 max_number_of_nodes = 150
 
@@ -97,6 +98,13 @@ def sim():
     fig.savefig("plot.png")
     plt.close(fig)
 
+    with open('throughputdata.pkl', 'wb') as fp:
+        pickle.dump((x, y), fp)
+
+    del fig
+    del ax
+    del y
+    del x
 
 if __name__ == "__main__":
     sim()

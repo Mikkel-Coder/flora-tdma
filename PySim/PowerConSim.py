@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+import pickle
 
 power_consumption = []
+power_consumption_total = []
 max_number_of_nodes = 150
-print("hi")
 
 
 def sim():
@@ -59,6 +60,7 @@ def sim():
 
         power_consumed = transmit_cost_mJ + receive_cost_mJ + idle_cost_mJ
         power_consumption.append(power_consumed)
+        power_consumption_total.append(power_consumed * node_count)
 
         if (
             power_break == 0 and
@@ -95,6 +97,38 @@ def sim():
     fig.tight_layout()
     fig.savefig("Pplot.png")
     plt.close(fig)
+
+    with open('powercondata.pkl', 'wb') as fp:
+        pickle.dump((x, y), fp)
+
+    del fig
+    del ax
+    del y
+
+    y = power_consumption_total
+
+    fig, ax = plt.subplots()
+
+    ax.plot(x, y, color="blue", label="Network Power Consumption")
+    ax.set_title("Theoretical Network Power Consumption \n" +
+                 f"[Packet size: {packet_size}]")
+    ax.set_xlabel("Number of nodes")
+    ax.set_ylabel("Network Power Consumption [mJ]")
+
+    ax.legend()
+    ax.grid(True)
+    fig.tight_layout()
+    fig.savefig("NPplot.png")
+    plt.close(fig)
+
+    with open('networkpowercondata.pkl', 'wb') as fp:
+        pickle.dump((x, y), fp)
+    
+    del fig
+    del ax
+    del y
+    del x
+
 
 
 if __name__ == "__main__":
