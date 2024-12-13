@@ -81,7 +81,7 @@ def sim():
     ax.axvline(packetgen_break, linestyle="dashed",
                label="More packets then we can send", color="green")
 
-    ax.text(0.5, max_throughput_for_packet_size - 0.5,
+    ax.text(max_number_of_nodes - 0.15, max_throughput_for_packet_size - 0.5,
             f"{max_throughput_for_packet_size:.2f}", color='orange',
             fontsize=12, ha='center', va='center')
     ax.text(packetgen_break - 4, -0.15,

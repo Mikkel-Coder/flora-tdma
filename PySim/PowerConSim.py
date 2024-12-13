@@ -52,9 +52,10 @@ def sim():
 
     x = list(range(1, max_number_of_nodes))
     y = power_consumption
+
     fig, ax = plt.subplots()
-    print(f"{x=},{y=}")
-    ax.plot(x, y, color="green", label="Power Consumption")
+    
+    ax.plot(x, y, color="blue", label="Power Consumption")
     ax.set_title("Theoretical Power Consumption per node " +
                  f"[Packet size: {packet_size}]")
     ax.set_xlabel("Number of nodes")
@@ -62,8 +63,16 @@ def sim():
 
     ax.axvline(power_break, linestyle="dashed",
                label="Power Consumption begins to decrease", color="green")
+    
+    ax.text(power_break - 4, power_consumption[power_break] - 0.15,
+            str(power_break), color='green',
+            fontsize=12, ha='center', va='center')
+    ax.text(5, power_consumption[0] - 0.05,
+            f"{power_consumption[0]:.2f}", color="blue",
+            fontsize=12, ha='center', va='center')
+
+    ax.legend()
     ax.grid(True)
-    plt.legend()
     fig.tight_layout()
     fig.savefig("Pplot.png")
     plt.close(fig)
