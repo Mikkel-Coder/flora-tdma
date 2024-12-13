@@ -101,5 +101,7 @@ def sim(packet_size: int):
     del y
     del x
 
+    return x, y
+
 if __name__ == "__main__":
     sim(20)
