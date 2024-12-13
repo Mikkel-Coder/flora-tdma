@@ -45,7 +45,7 @@ void LoRaTransmitter::initialize(int stage)
         {
             iAmGateway = true;
         } else iAmGateway = false;
-        payloaddatasize = par('payloaddatasize');
+        payloaddatasize = par("payloaddatasize").intValue();
     }
 }
 
