@@ -4,24 +4,19 @@ import pickle
 max_number_of_nodes = 150
 
 
-def sim():
+def sim(packet_size: int):
     guard_time = 0.4
     broadcast = 7
     header_size = 2
-    packet_size = 20
-    max_packet_size = 256
     time_slots = 100
     packet_airtime = 11.6
     lambda_value = 1/10**3
 
     time_of_period = broadcast + (guard_time + packet_airtime) * time_slots
 
-    max_throughput_possible = (
-        (header_size + max_packet_size) / packet_airtime) * 8
     max_throughput_for_packet_size = (
         (header_size + packet_size) / packet_airtime) * 8
 
-    print(f"{max_throughput_possible=}")
     print(f"{max_throughput_for_packet_size=}")
 
     throughput_list = []
@@ -107,4 +102,4 @@ def sim():
     del x
 
 if __name__ == "__main__":
-    sim()
+    sim(20)

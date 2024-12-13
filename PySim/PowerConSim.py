@@ -6,12 +6,10 @@ power_consumption_total = []
 max_number_of_nodes = 150
 
 
-def sim():
+def sim(packet_size: int):
     guard_time = 0.4
     broadcast = 7
     packet_airtime = 11.6
-    packet_size = 20
-    max_packet_size = 254
     packet_bits = packet_size*8
     timeslots = 100
     lampda = 1/10**3
@@ -132,4 +130,4 @@ def sim():
 
 
 if __name__ == "__main__":
-    sim()
+    sim(20)
