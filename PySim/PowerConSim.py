@@ -14,31 +14,50 @@ def sim():
     packet_bits = packet_size*8
     timeslots = 100
     lampda = 1/10**3
+    cycle_time = broadcast + (guard_time + packet_airtime) * timeslots
 
     power_break = 0
-    periode_time = broadcast + (guard_time + packet_airtime) * timeslots
 
     # broadcastConsumtion = 0.03201  # Wattage to receive broadcast
     # transConsumtion = 0.1452  #wattage to send with 20 bytes of data + header
     voltage = 3.3
-    mA = 44
-    mW_power = voltage * mA
+    transmit_mA = 44
+    receive_mA = 9.7
+    idle_mA = 0.0001
+
+    transmit_mW = voltage * transmit_mA
+    receive_mW = voltage * receive_mA
+    idle_mW = voltage * idle_mA
 
     datarate = 183.1054688
-    time_transmitting = packet_bits/datarate
+    timeslot_transmit_time = packet_bits/datarate
 
-    # This is our powerConsumtion per transmission (dependend on packetsize)
-    cost_mJ = mW_power * time_transmitting
+    time_used_on_receive = 6.4 / cycle_time
+
+    receive_cost_mJ = time_used_on_receive * receive_mW
 
     for node_count in range(1, max_number_of_nodes):
-        expected_packet_per_node = lampda * periode_time
+        expected_packet_per_node = lampda * cycle_time
 
-        packet_sent = expected_packet_per_node / (timeslots/node_count)
+        num_of_timeslots_per_node = timeslots/node_count
+
+        packet_sent = expected_packet_per_node / num_of_timeslots_per_node
 
         if packet_sent > 1:
             packet_sent = 1
 
-        power_consumed = (cost_mJ * packet_sent) / node_count
+        timeslots_filled = num_of_timeslots_per_node * packet_sent
+
+        time_used_on_transmit = \
+            (timeslot_transmit_time * timeslots_filled) / cycle_time
+        time_used_on_idle = \
+            (cycle_time - (time_used_on_receive + time_used_on_transmit)) \
+            / cycle_time
+
+        transmit_cost_mJ = time_used_on_transmit * transmit_mW
+        idle_cost_mJ = time_used_on_idle * idle_mW
+
+        power_consumed = transmit_cost_mJ + receive_cost_mJ + idle_cost_mJ
         power_consumption.append(power_consumed)
 
         if (
@@ -54,20 +73,20 @@ def sim():
     y = power_consumption
 
     fig, ax = plt.subplots()
-    
+
     ax.plot(x, y, color="blue", label="Power Consumption")
-    ax.set_title("Theoretical Power Consumption per node " +
+    ax.set_title("Theoretical Power Consumption per node per second \n" +
                  f"[Packet size: {packet_size}]")
     ax.set_xlabel("Number of nodes")
     ax.set_ylabel("Node Power Consumption [mJ]")
 
     ax.axvline(power_break, linestyle="dashed",
                label="Power Consumption begins to decrease", color="green")
-    
-    ax.text(power_break - 4, power_consumption[power_break] - 0.15,
+
+    ax.text(power_break - 4, power_consumption[power_break] - 0.01,
             str(power_break), color='green',
             fontsize=12, ha='center', va='center')
-    ax.text(5, power_consumption[0] - 0.05,
+    ax.text(5, power_consumption[0] - 0.002,
             f"{power_consumption[0]:.2f}", color="blue",
             fontsize=12, ha='center', va='center')
 
