@@ -51,7 +51,7 @@ def sim(packet_size: int, total: bool) -> list[int, float]:
         transmit_cost_mJ = time_used_on_transmit * transmit_mW
         idle_cost_mJ = time_used_on_idle * idle_mW
 
-        power_consumed = transmit_cost_mJ + receive_cost_mJ + (idle_cost_mJ * 1000)
+        power_consumed = transmit_cost_mJ + receive_cost_mJ + idle_cost_mJ
         power_consumption.append(power_consumed)
         power_consumption_total.append(power_consumed * node_count)
 
@@ -124,10 +124,11 @@ def sim(packet_size: int, total: bool) -> list[int, float]:
     # del ax
     # del y
     # del x
+    print(timeslot_transmit_time)
 
     return x, y
 
 
 
 if __name__ == "__main__":
-    sim(20)
+    sim(20, total=False)

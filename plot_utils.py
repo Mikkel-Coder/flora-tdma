@@ -234,7 +234,7 @@ def load_clean_dataset() -> tuple[dict, dict]:
     
     return data_vec, data_sca
 
-def calculate_power_consumption_per_node(data_sca: dict) -> tuple[list[int], list[float]]:
+def calculate_power_consumption_per_node(data_sca: dict, conf: dict) -> tuple[list[int], list[float]]:
     x = sorted(int(key) for key in data_sca.keys())
     y = [data_sca[str(key)]['mean_node_energy_consumption'] for key in x]
     return x, y 

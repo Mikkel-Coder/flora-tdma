@@ -15,6 +15,8 @@ from PySim.PowerConSim import sim as power_consumption_theorectical
 
 SAVE_PLOT: bool = True
 
+plt.rcParams["font.family"] = "DejaVu Serif"
+
 def save_plot_to_folder(fig, filename: str) -> None:
     save_folder = Path('samples/flora-tdma/figures/')
     fig.savefig(save_folder / filename)
@@ -24,7 +26,7 @@ def save_plot_to_folder(fig, filename: str) -> None:
 def plot_throughput(data: dict, size: int):
     fig, ax = plt.subplots()
     
-    ax.set_title(f'Throughput using packet size: {size}')
+    ax.set_title(f'Throughput using packet size: {size}B')
     ax.plot(data[f'throughput-{size}']['x'],
             data[f'throughput-{size}']['y'],
             color="blue",
@@ -35,56 +37,77 @@ def plot_throughput(data: dict, size: int):
             color="red",
             label="Theoretical" 
     )
-    ax.set_xlabel("Number of nodes")
+    ax.set_xlabel("Number of Nodes")
     ax.set_ylabel("Throughput [bps]")
     ax.legend()
     ax.grid(True)
     fig.tight_layout()
-    save_plot_to_folder(fig, f'throughput-{size}.png') if SAVE_PLOT else plt.show()
+    save_plot_to_folder(fig, f'throughput-{size}.pdf') if SAVE_PLOT else plt.show()
 
 
-def plot_power_per_node(data: dict, size: int):
+def plot_power_per_node(data: dict):
     fig, ax = plt.subplots()
     
-    ax.set_title(f'Power consumption per node using packet size: {size}')
-    ax.plot(data[f'power_per_node-{size}']['x'],
-            data[f'power_per_node-{size}']['y'],
+    ax.set_title(f'Power Consumption per Node')
+    ax.plot(data[f'power_per_node-{20}']['x'],
+            data[f'power_per_node-{20}']['y'],
             color="blue",
-            label="Simulation" 
+            label="Simulation: 20B" 
     )
-    ax.plot(data[f'power-per-node-theoretical-{size}']['x'],
-            data[f'power-per-node-theoretical-{size}']['y'],
+    ax.plot(data[f'power_per_node-254']['x'],
+            data[f'power_per_node-254']['y'],
             color="red",
-            label="Theoretical" 
+            label="Simulation: 254B" 
     )
-    ax.set_xlabel("Number of nodes")
-    ax.set_ylabel("Energy consumption [J]")
+    ax.set_xlabel("Number of Nodes")
+    ax.set_ylabel("Energy Consumption [J]")
     ax.legend()
     ax.grid(True)
-    save_plot_to_folder(fig, f'power-per-node-{size}.png') if SAVE_PLOT else plt.show()
+    save_plot_to_folder(fig, 'power-per-node.pdf') if SAVE_PLOT else plt.show()
 
 
-def plot_nec(data: dict):
-    print(data)
+def plot_nec_sim(data: dict):
     fig, ax = plt.subplots()
 
     ax.plot(data[f'nec-{20}']['x'],
             data[f'nec-{20}']['y'],
-            color="blue",
-            label="Size: 20" 
+            color="red",
+            label="Simulation: 20B" 
     )
     ax.plot(data[f'nec-{254}']['x'],
             data[f'nec-{254}']['y'],
-            color="green",
-            label="Size: 254" 
+            color="blue",
+            label="Simulation: 254B" 
     )
 
-    ax.set_title('Network Energy Consumption')
-    ax.set_xlabel("Number of nodes")
+    ax.set_title('Network Energy Consumption Simulation')
+    ax.set_xlabel("Number of Nodes")
     ax.set_ylabel("NEC [J]")
     ax.legend()
     ax.grid(True)
-    save_plot_to_folder(fig, 'nec.png') if SAVE_PLOT else plt.show()
+    save_plot_to_folder(fig, 'nec_sim.pdf') if SAVE_PLOT else plt.show()
+
+
+def plot_nec_theoretical(data: dict):
+    fig, ax = plt.subplots()
+
+    ax.plot(data[f'nec-theoretical-{20}']['x'],
+            data[f'nec-theoretical-{20}']['y'],
+            color="red",
+            label="Theoretical: 20B" 
+    )
+    ax.plot(data[f'nec-theoretical-{254}']['x'],
+            data[f'nec-theoretical-{254}']['y'],
+            color="blue",
+            label="Theoretical: 254B" 
+    )
+
+    ax.set_title('Network Energy Consumption Theoretical')
+    ax.set_xlabel("Number of Nodes")
+    ax.set_ylabel("NEC [mJ]")
+    ax.legend()
+    ax.grid(True)
+    save_plot_to_folder(fig, 'nec_theoretical.pdf') if SAVE_PLOT else plt.show()
 
 
 def compute_and_save(functions_to_call, run_parameters, pre_computed_results):
@@ -106,7 +129,7 @@ def main() -> None:
     }
     functions_to_call = [
         (calculate_throughput, [data_vec, run_parameters], "throughput"),
-        (calculate_power_consumption_per_node, [data_sca], "power_per_node"),
+        (calculate_power_consumption_per_node, [data_sca, run_parameters], "power_per_node"),
         (calculate_network_energy_consumption, [data_sca], "nec")
     ]
 
@@ -128,30 +151,33 @@ def main() -> None:
     pre_computed_results_data['throughput-theoretical-254']['y'] = y
 
     # Compute the theoretical power
-    x, y = power_consumption_theorectical(20, total=False)
-    pre_computed_results_data['power-per-node-theoretical-20']['x'] = x
-    pre_computed_results_data['power-per-node-theoretical-20']['y'] = y
+    # Wrong calculations
+    #x, y = power_consumption_theorectical(20, total=False)
+    #pre_computed_results_data['power-per-node-theoretical-20']['x'] = x
+    #pre_computed_results_data['power-per-node-theoretical-20']['y'] = y
 
-    x, y = power_consumption_theorectical(254, total=False)
-    pre_computed_results_data['power-per-node-theoretical-254']['x'] = x
-    pre_computed_results_data['power-per-node-theoretical-254']['y'] = y
+    # Wrong calculations
+    #x, y = power_consumption_theorectical(254, total=False)
+    #pre_computed_results_data['power-per-node-theoretical-254']['x'] = x
+    #pre_computed_results_data['power-per-node-theoretical-254']['y'] = y
 
     x, y = power_consumption_theorectical(20, total=True)
-    pre_computed_results_data['nec-20']['x'] = x
-    pre_computed_results_data['nec-20']['y'] = y
+    y = [mj / 1000 for mj in y]
+    pre_computed_results_data['nec-theoretical-20']['x'] = x
+    pre_computed_results_data['nec-theoretical-20']['y'] = y
 
     x, y = power_consumption_theorectical(254, total=True)
-    pre_computed_results_data['nec-254']['x'] = x
-    pre_computed_results_data['nec-254']['y'] = y
-
+    y = [mj / 1000 for mj in y]
+    pre_computed_results_data['nec-theoretical-254']['x'] = x
+    pre_computed_results_data['nec-theoretical-254']['y'] = y
 
     plot_throughput(pre_computed_results_data, size=20)
     plot_throughput(pre_computed_results_data, size=254)
 
-    plot_power_per_node(pre_computed_results_data, size=20)
-    plot_power_per_node(pre_computed_results_data, size=254)
+    plot_power_per_node(pre_computed_results_data)
 
-    plot_nec(pre_computed_results_data)
+    plot_nec_sim(pre_computed_results_data)
+    plot_nec_theoretical(pre_computed_results_data)
 
 
 if __name__ == '__main__':
