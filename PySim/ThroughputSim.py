@@ -1,10 +1,5 @@
-import matplotlib.pyplot as plt
-import pickle
-
-max_number_of_nodes = 150
-
-
-def sim(packet_size: int):
+def sim(packet_size: int) -> list[int, float]:
+    max_number_of_nodes = 150
     guard_time = 0.4
     broadcast = 7
     header_size = 2
@@ -17,7 +12,7 @@ def sim(packet_size: int):
     max_throughput_for_packet_size = (
         (header_size + packet_size) / packet_airtime) * 8
 
-    print(f"{max_throughput_for_packet_size=}")
+    #print(f"{max_throughput_for_packet_size=}")
 
     throughput_list = []
 
@@ -57,49 +52,49 @@ def sim(packet_size: int):
 
         throughput = throughPuttimeslot * 8
         throughput_list.append(throughput)
-        print(f"{throughput=}")
+        #print(f"{throughput=}")
 
     x = list(range(1, max_number_of_nodes))
     y = throughput_list
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
 
-    ax.plot(x, y, color="blue", label="Throughput")
-    ax.set_title("Theoretically Throughtput for node count " +
-                 f"[Packet Size: {packet_size}]")
-    ax.set_xlabel("Number of nodes")
-    ax.set_ylabel("Throughput [bps]")
+    # ax.plot(x, y, color="blue", label="Throughput")
+    # ax.set_title("Theoretically Throughtput for node count " +
+    #              f"[Packet Size: {packet_size}]")
+    # ax.set_xlabel("Number of nodes")
+    # ax.set_ylabel("Throughput [bps]")
 
-    # ax.axhline(max_throughput_possible, linestyle="dashed",
-    #             label="Max Throughput Possible", color="red")
-    ax.axhline(max_throughput_for_packet_size, linestyle="dashed",
-               label="Max Throughput For Size", color="orange")
-    ax.axvline(packetgen_break, linestyle="dashed",
-               label="More packets then we can send", color="green")
+    # # ax.axhline(max_throughput_possible, linestyle="dashed",
+    # #             label="Max Throughput Possible", color="red")
+    # ax.axhline(max_throughput_for_packet_size, linestyle="dashed",
+    #            label="Max Throughput For Size", color="orange")
+    # ax.axvline(packetgen_break, linestyle="dashed",
+    #            label="More packets then we can send", color="green")
 
-    ax.text(max_number_of_nodes - 0.15, max_throughput_for_packet_size - 0.5,
-            f"{max_throughput_for_packet_size:.2f}", color='orange',
-            fontsize=12, ha='center', va='center')
-    ax.text(packetgen_break - 4, -0.15,
-            str(packetgen_break), color='green',
-            fontsize=12, ha='center', va='center')
-    ax.text(max_number_of_nodes - 8, throughput_list[-1] - 0.5,
-            f"{throughput_list[-1]:.2f}", color="blue",
-            fontsize=12, ha='center', va='center')
+    # ax.text(max_number_of_nodes - 0.15, max_throughput_for_packet_size - 0.5,
+    #         f"{max_throughput_for_packet_size:.2f}", color='orange',
+    #         fontsize=12, ha='center', va='center')
+    # ax.text(packetgen_break - 4, -0.15,
+    #         str(packetgen_break), color='green',
+    #         fontsize=12, ha='center', va='center')
+    # ax.text(max_number_of_nodes - 8, throughput_list[-1] - 0.5,
+    #         f"{throughput_list[-1]:.2f}", color="blue",
+    #         fontsize=12, ha='center', va='center')
 
-    ax.legend()
-    ax.grid(True)
-    fig.tight_layout()
-    fig.savefig("plot.png")
-    plt.close(fig)
+    # ax.legend()
+    # ax.grid(True)
+    # fig.tight_layout()
+    # fig.savefig("plot.png")
+    # plt.close(fig)
 
-    with open('throughputdata.pkl', 'wb') as fp:
-        pickle.dump((x, y), fp)
+    # with open('throughputdata.pkl', 'wb') as fp:
+    #     pickle.dump((x, y), fp)
 
-    del fig
-    del ax
-    del y
-    del x
+    # del fig
+    # del ax
+    #del y
+    #del x
 
     return x, y
 

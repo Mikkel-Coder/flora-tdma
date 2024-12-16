@@ -1,12 +1,7 @@
-import matplotlib.pyplot as plt
-import pickle
-
-power_consumption = []
-power_consumption_total = []
-max_number_of_nodes = 150
-
-
-def sim(packet_size: int):
+def sim(packet_size: int, total: bool) -> list[int, float]:
+    power_consumption: list[float] = []
+    power_consumption_total = []
+    max_number_of_nodes = 150
     guard_time = 0.4
     broadcast = 7
     packet_airtime = 11.6
@@ -56,7 +51,7 @@ def sim(packet_size: int):
         transmit_cost_mJ = time_used_on_transmit * transmit_mW
         idle_cost_mJ = time_used_on_idle * idle_mW
 
-        power_consumed = transmit_cost_mJ + receive_cost_mJ + idle_cost_mJ
+        power_consumed = transmit_cost_mJ + receive_cost_mJ + (idle_cost_mJ * 1000)
         power_consumption.append(power_consumed)
         power_consumption_total.append(power_consumed * node_count)
 
@@ -67,65 +62,68 @@ def sim(packet_size: int):
         ):
             power_break = node_count - 1
 
-        print(f"{power_consumed}")
+        # print(f"{power_consumed}")
 
     x = list(range(1, max_number_of_nodes))
-    y = power_consumption
+    if total:
+        y = power_consumption_total
+    else: 
+        y = power_consumption
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
 
-    ax.plot(x, y, color="blue", label="Power Consumption")
-    ax.set_title("Theoretical Power Consumption per node per second \n" +
-                 f"[Packet size: {packet_size}]")
-    ax.set_xlabel("Number of nodes")
-    ax.set_ylabel("Node Power Consumption [mJ]")
+    # ax.plot(x, y, color="blue", label="Power Consumption")
+    # ax.set_title("Theoretical Power Consumption per node per second \n" +
+    #              f"[Packet size: {packet_size}]")
+    # ax.set_xlabel("Number of nodes")
+    # ax.set_ylabel("Node Power Consumption [mJ]")
 
-    ax.axvline(power_break, linestyle="dashed",
-               label="Power Consumption begins to decrease", color="green")
+    # ax.axvline(power_break, linestyle="dashed",
+    #            label="Power Consumption begins to decrease", color="green")
 
-    ax.text(power_break - 4, power_consumption[power_break] - 0.01,
-            str(power_break), color='green',
-            fontsize=12, ha='center', va='center')
-    ax.text(5, power_consumption[0] - 0.002,
-            f"{power_consumption[0]:.2f}", color="blue",
-            fontsize=12, ha='center', va='center')
+    # ax.text(power_break - 4, power_consumption[power_break] - 0.01,
+    #         str(power_break), color='green',
+    #         fontsize=12, ha='center', va='center')
+    # ax.text(5, power_consumption[0] - 0.002,
+    #         f"{power_consumption[0]:.2f}", color="blue",
+    #         fontsize=12, ha='center', va='center')
 
-    ax.legend()
-    ax.grid(True)
-    fig.tight_layout()
-    fig.savefig("Pplot.png")
-    plt.close(fig)
+    # ax.legend()
+    # ax.grid(True)
+    # fig.tight_layout()
+    # fig.savefig("Pplot.png")
+    # plt.close(fig)
 
-    with open('powercondata.pkl', 'wb') as fp:
-        pickle.dump((x, y), fp)
+    # with open('powercondata.pkl', 'wb') as fp:
+    #     pickle.dump((x, y), fp)
 
-    del fig
-    del ax
-    del y
+    # del fig
+    # del ax
+    # del y
 
-    y = power_consumption_total
+    # y = power_consumption_total
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
 
-    ax.plot(x, y, color="blue", label="Network Power Consumption")
-    ax.set_title("Theoretical Network Power Consumption \n" +
-                 f"[Packet size: {packet_size}]")
-    ax.set_xlabel("Number of nodes")
-    ax.set_ylabel("Network Power Consumption [mJ]")
+    # ax.plot(x, y, color="blue", label="Network Power Consumption")
+    # ax.set_title("Theoretical Network Power Consumption \n" +
+    #              f"[Packet size: {packet_size}]")
+    # ax.set_xlabel("Number of nodes")
+    # ax.set_ylabel("Network Power Consumption [mJ]")
 
-    ax.legend()
-    ax.grid(True)
-    fig.tight_layout()
-    fig.savefig("NPplot.png")
-    plt.close(fig)
+    # ax.legend()
+    # ax.grid(True)
+    # fig.tight_layout()
+    # fig.savefig("NPplot.png")
+    # plt.close(fig)
 
-    with open('networkpowercondata.pkl', 'wb') as fp:
-        pickle.dump((x, y), fp)
+    # with open('networkpowercondata.pkl', 'wb') as fp:
+    #     pickle.dump((x, y), fp)
     
-    del fig
-    del ax
-    del y
-    del x
+    # del fig
+    # del ax
+    # del y
+    # del x
 
     return x, y
 
