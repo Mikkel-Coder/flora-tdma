@@ -9,8 +9,9 @@ def sim(packet_size: int) -> list[int, float]:
 
     time_of_period = broadcast + (guard_time + packet_airtime) * time_slots
 
-    max_throughput_for_packet_size = (
-        (header_size + packet_size) / packet_airtime) * 8
+    shortest_airtime = (0.401) + (packet_size * 8) / 183.1 # preamble + data rate
+
+    max_throughput_for_packet_size = (packet_size * 8 / shortest_airtime)
 
     #print(f"{max_throughput_for_packet_size=}")
 
@@ -72,13 +73,13 @@ def sim(packet_size: int) -> list[int, float]:
     # ax.axvline(packetgen_break, linestyle="dashed",
     #            label="More packets then we can send", color="green")
 
-    # ax.text(max_number_of_nodes - 0.15, max_throughput_for_packet_size - 0.5,
+    # ax.text(max_number_of_nodes - 1, max_throughput_for_packet_size - 4,
     #         f"{max_throughput_for_packet_size:.2f}", color='orange',
     #         fontsize=12, ha='center', va='center')
     # ax.text(packetgen_break - 4, -0.15,
     #         str(packetgen_break), color='green',
     #         fontsize=12, ha='center', va='center')
-    # ax.text(max_number_of_nodes - 8, throughput_list[-1] - 0.5,
+    # ax.text(max_number_of_nodes - 8, throughput_list[-1] - 4,
     #         f"{throughput_list[-1]:.2f}", color="blue",
     #         fontsize=12, ha='center', va='center')
 
@@ -99,4 +100,4 @@ def sim(packet_size: int) -> list[int, float]:
     return x, y
 
 if __name__ == "__main__":
-    sim(20)
+    sim(254)
