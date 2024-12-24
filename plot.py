@@ -171,13 +171,20 @@ def main() -> None:
     pre_computed_results_data['nec-theoretical-254']['x'] = x
     pre_computed_results_data['nec-theoretical-254']['y'] = y
 
-    plot_throughput(pre_computed_results_data, size=20)
-    plot_throughput(pre_computed_results_data, size=254)
+    print("bruh")
+    y = pre_computed_results_data['throughput-20']['y']
+    print(max(y))
 
-    plot_power_per_node(pre_computed_results_data)
+    y = pre_computed_results_data['throughput-254']['y']
+    print(max(y))
 
-    plot_nec_sim(pre_computed_results_data)
-    plot_nec_theoretical(pre_computed_results_data)
+    # plot_throughput(pre_computed_results_data, size=20)
+    # plot_throughput(pre_computed_results_data, size=254)
+
+    # plot_power_per_node(pre_computed_results_data)
+
+    # plot_nec_sim(pre_computed_results_data)
+    # plot_nec_theoretical(pre_computed_results_data)
 
 
 if __name__ == '__main__':
