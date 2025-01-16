@@ -1,12 +1,11 @@
-# FLoRa
-<a href="https://www.buymeacoffee.com/mariuszslabicki" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-red.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+# lora-tdma
+flora-tdma is a proof-of-concept (PoC) implementation of Time Division Multiple Access (TDMA) based on [FLoRa](https://github.com/florasim/flora), [OMNeT++](https://omnetpp.org/), and [INET](https://inet.omnetpp.org/).
 
-FLoRa (Framework for LoRa) is a simulation framework for carrying out end-to-end simulations for LoRa networks. 
-It is based on the [OMNeT++](https://omnetpp.org/) network simulator and uses components from the [INET framework](https://inet.omnetpp.org/) as well.
+![LoRa-TDMA simulation](lora-tdma.gif)
 
-FLoRa allows the creation of LoRa networks with modules for LoRa nodes, gateway(s) and a network server. 
-Application logic can be deployed as independent modules that are connected with the network server. 
-The network server and nodes support dynamic management of configuration parameters through Adaptive Data Rate (ADR). 
-Finally, the energy consumption statistics are collected in every node.
+## Description
+The LoRaTDMAGW (gateway) starts by broadcasting a static timeslot allocation table of 100 slots, using a round-robbin inspired algorithm divided among the predefined number of participating nodes. Every node then receives the broadcast checking what (if any) timeslot(s) it has been designated to.
 
-More information here: [flora.aalto.fi](http://flora.aalto.fi/)
+A timeslot is 12 seconds, based on worst-case scenarios and real life limitations using LoRa modulation with spreading factor $SF = 12$, bandwidth $BW = 125 kHz$, and coding rate $CR = 4$, including a simulated clock deviation of $30ppm$. The LoRaTMDGW broadcast takes 6.42 seconds. This means that a TDMA-cycle takes $12 \cdot 100+6.7 ≈ 1206s ≈ 20 min$, repeating indefinitely.
+
+The probability of a LoRaTDMA nodes application sending a packet is simulated using a Poisson process with a lambda of $1 \cdot 10^{-6}ms$. LoRaTMDA nodes always have a packet to send in the beginning of a simulation.
