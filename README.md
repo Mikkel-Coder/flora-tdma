@@ -1,4 +1,4 @@
-# lora-tdma
+# flora-tdma
 flora-tdma is a proof-of-concept (PoC) implementation of Time Division Multiple Access (TDMA) based on [FLoRa](https://github.com/florasim/flora), [OMNeT++](https://omnetpp.org/), and [INET](https://inet.omnetpp.org/).
 
 ![LoRa-TDMA simulation](lora-tdma.gif)
