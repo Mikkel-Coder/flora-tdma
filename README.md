@@ -8,4 +8,4 @@ The LoRaTDMAGW (gateway) starts by broadcasting a static timeslot allocation tab
 
 A timeslot is 12 seconds, based on worst-case scenarios and real life limitations using LoRa modulation with spreading factor $SF = 12$, bandwidth $BW = 125 kHz$, and coding rate $CR = 4$, including a simulated clock deviation of $30ppm$. The LoRaTMDGW broadcast takes 6.42 seconds. This means that a TDMA-cycle takes $12 \cdot 100+6.7 ≈ 1206s ≈ 20 min$, repeating indefinitely.
 
-The probability of a LoRaTDMA nodes application sending a packet is simulated using a Poisson process with a lambda of $1 \cdot 10^{-6}ms$. LoRaTMDA nodes always have a packet to send in the beginning of a simulation.
+The probability of a LoRaTDMA nodes application sending a packet is simulated using a Poisson process with a mean of 1000 seconds, about every 17 minutes. LoRaTMDA nodes always have a packet to send in the beginning of a simulation.
